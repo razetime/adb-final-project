@@ -24,17 +24,23 @@ class neo4jConnection:
         print('check_connectivity', res)
 
     def check_and_init_data(self):
-        check_records= self.driver.execute_query(
-            qtool.get_one_order()["query"],
-            database_=DATABASE,
-            result_transformer_= Result.single
-        )
-        if not check_records:
-            print ("empty orders!")
-            # TODO: remove everything and re-write to DB
+        session = self.driver.session(database=DATABASE)
+        check_records= session.run(qtool.get_one_order()["query"])
+        if not len(check_records.data()):
+            print("add orders:")
+            add_query = qtool.get_add_order_csv_files()["query"]
+            session.run(add_query)
+        
+        check_records= session.run(qtool.get_one_product()["query"])
+        if not len(check_records.data()):
+            print("add products:")
+            add_query = qtool.get_add_product_csv_files()["query"]
+            session.run(add_query)
 
-    def fetch_data(self, params):
-        query_data = qtool.get_all_orders_with_product_name()
+        # TODO: what to do when product not in list?
+
+    def fetch_data(self, func_name, params):
+        query_data = getattr(qtool, func_name)()
         query_parameters = {}
         for i in range(len(query_data["parameters"])):
             query_parameters[query_data["parameters"][i]] = params[i]
@@ -48,3 +54,7 @@ class neo4jConnection:
         #     # result_transformer_=Result.consume
         # )
         return records
+    
+    # TODO: visualize/go over results
+    
+
