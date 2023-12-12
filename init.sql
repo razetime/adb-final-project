@@ -53,6 +53,10 @@
 -- \copy cancel_order FROM 'cancel_order.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE E'\b',NULL 'NULL');
 
 
+
+-- Uncopiable tables start here.
+-- These have their own python files for import.
+
 drop table order_template;
 create table order_template (
   customer_code varchar(70),
@@ -97,18 +101,36 @@ create table order_template (
 -- CREATE TABLE order_2012Q2 (like order_2011Q1 including all);
 -- \copy order_2012Q2 FROM 'order_2012Q2_corrected.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE '"',NULL 'NULL');
 
-drop table supplier;
-create table supplier (
-  supplier_code smallint,
-  supplier_name varchar(35),
-  shipping_zip_code smallint,
-  ship_city varchar(5),
-  ship_district varchar(5),
-  registration_zip_code smallint,
-  supplier_registration_city varchar(5),
-  supplier_registration_district varchar(5)
+-- drop table supplier;
+-- create table supplier (
+--   supplier_code smallint,
+--   supplier_name varchar(35),
+--   shipping_zip_code smallint,
+--   ship_city varchar(5),
+--   ship_district varchar(5),
+--   registration_zip_code smallint,
+--   supplier_registration_city varchar(5),
+--   supplier_registration_district varchar(5)
+-- );
+
+\cd 2_商品檔
+\! echo %cd%
+
+drop table if exists product_out;
+create table product_out (
+ supplier_serial_number integer,
+ product_number integer,
+ parent_category integer,
+ subcategory integer,
+ supplier_material_number varchar(50),
+ product_name varchar(50),
+ international_barcode varchar(13),
+ product_volume_length real,
+ product_volume_width real,
+ product_volume_height real,
+ product_weight integer,
+ warehouse_category char(2)
 );
-
-
+\copy product_out FROM 'product(倉出).csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',NULL 'NULL');
 
 \l+ adb_final
