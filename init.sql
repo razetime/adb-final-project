@@ -1,3 +1,6 @@
+-- creates table schemas for importing the data.
+-- if the csv is not malformed, this also imports data directly.
+
 -- unless for testing out DO NOT RUN THIS FILE! Schema is not finalized and this
 -- is subject to change.
 -- If you have modifications done to 'adb_final' database DO NOT RUN THIS SCRIPT!!
@@ -49,31 +52,7 @@
 
 -- \copy cancel_order FROM 'cancel_order.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE E'\b',NULL 'NULL');
 
--- drop table order_2011Q1_temp;
--- schema for orders:
---   customer_code varchar(50),
---   RG_order_number integer,
---   product_vol_length real,     -- These
---   product_vol_width real,      -- columns
---   product_vol_height real,     -- are
---   product_vol_weight integer,  -- always
---   packaging_box_number integer,-- null.
---   order_number varchar(15),
---   sub_order_number varchar(15),
---   shipping_order_number varchar(30),
---   order_establishment_time timestamp,
---   product_number integer,
---   latest_shipping_date timestamp,
---   shipping_date timestamp,
---   zip_code smallint, 
---   delivery_address varchar(100),
---   delivery_manufacturer varchar(10),
---   warehouse varchar(5),
---   shipping_method varchar(5),
---   cumulative_delivery_times smallint
 
-
-\echo "importing 2011, Q1"
 drop table order_template;
 create table order_template (
   customer_code varchar(70),
@@ -94,29 +73,42 @@ create table order_template (
   cumulative_delivery_times smallint
 );
 
-drop table order_2011Q1;
-create table order_2011Q1 (like order_template including all);
+-- drop table order_2011Q1;
+-- create table order_2011Q1 (like order_template including all);
 -- \copy order_2011Q1 FROM 'order_2011Q1_corrected.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE '"',NULL 'NULL');
 -- \echo "importing 2011, Q2"
-drop table order_2011Q2;
-CREATE TABLE order_2011Q2 (like order_template including all);
+-- drop table order_2011Q2;
+-- CREATE TABLE order_2011Q2 (like order_template including all);
 -- \copy order_2011Q2 FROM 'order_2011Q2_corrected.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE '"',NULL 'NULL');
 -- \echo "importing 2011, Q3"
-drop table if exists order_2011Q3;
-CREATE TABLE order_2011Q3 (like order_template including all);
--- \copy order_2011Q3 FROM 'order_2011Q3_corrected.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE E'\b',NULL 'NULL',ESCAPE '\');
+-- drop table if exists order_2011Q3;
+-- CREATE TABLE order_2011Q3 (like order_template including all);
+-- \copy order_2011Q3 FROM 'order_2011Q3_corrected.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE '"',NULL 'NULL',ESCAPE '\');
 -- \echo "importing 2011, Q4"
-drop table order_2011Q4;
-CREATE TABLE order_2011Q4 (like order_template including all);
+-- drop table order_2011Q4;
+-- CREATE TABLE order_2011Q4 (like order_template including all);
 -- \copy order_2011Q4 FROM 'order_2011Q4_corrected.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE '"',NULL 'NULL');
 -- \echo "importing 2012, Q1"
-drop table order_2012Q1;
-CREATE TABLE order_2012Q1 (like order_2011Q1 including all);
+-- drop table order_2012Q1;
+-- CREATE TABLE order_2012Q1 (like order_2011Q1 including all);
 -- \copy order_2012Q1 FROM 'order_2012Q1_corrected.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE '"',NULL 'NULL');
 -- \echo "importing 2012, Q2"
-drop table order_2012Q2;
-CREATE TABLE order_2012Q2 (like order_2011Q1 including all);
+-- drop table order_2012Q2;
+-- CREATE TABLE order_2012Q2 (like order_2011Q1 including all);
 -- \copy order_2012Q2 FROM 'order_2012Q2_corrected.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',QUOTE '"',NULL 'NULL');
+
+drop table supplier;
+create table supplier (
+  supplier_code smallint,
+  supplier_name varchar(35),
+  shipping_zip_code smallint,
+  ship_city varchar(5),
+  ship_district varchar(5),
+  registration_zip_code smallint,
+  supplier_registration_city varchar(5),
+  supplier_registration_district varchar(5)
+);
+
 
 
 \l+ adb_final
