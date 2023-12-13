@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Series Analysis of Product Sales</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+</head>
+<body>
+    <div class="container">
+        <div class="inputs-section">
+            <div class="header">
+                <div class="logo-title-container">
+                    <img src="imgs/bag.png" alt="MarketPulse360 Logo" class="logo">
+                    <h1>MarketPulse360</h1>
+                </div>
+                <div class="home-title-container">
+                    <h1>Home</h1>
+                    <a href="main.html"><img src="imgs/home.png" alt="Home" class="home-icon"></a>
+                </div>
+            </div>
+            <h2 class="title">Time Series Analysis of Product Sales</h2>
+            <div class="inputs">
+                <div class="input-group">
+                    <label for="supplier">Supplier Name</label>
+                    <select id="supplier">
+                        <option value="Asus">Asus</option>
+                        <option value="Acer">Acer</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="product-name">Product Name</label>
+                    <select id="product-name">
+                        <option value="laptop">Laptop</option>
+                        <option value="monitor">Monitor</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="time-frame">Time Frame</label>
+                    <select id="time-frame">
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+            </div>
+            <button id="submit">Submit</button>
+        </div>
+        <div class="chart-section">
+            <div class="chart-container">
+                <canvas id="myChart" width="700" height="500"></canvas>
+                <div class="slider-container">
+                    <div class="min-max-info" id="min-info"></div>
+                    <div id="slider-range"></div>
+                    <div class="min-max-info" id="max-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var initialData = {
+            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            datasets: [{
+                label: 'Sales Volume',
+                data: [120, 190, 300, 250, 210, 350, 320, 290, 230, 400, 380, 360],
+                borderColor: 'rgba(0, 123, 255, 1)',
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+            }]
+        };
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: initialData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        $(function() {
+            $("#min-info").text('Min: ' + initialData.labels[0]);
+            $("#max-info").text('Max: ' + initialData.labels[initialData.labels.length - 1]);
+
+            $("#slider-range").slider({
+                range: true,
+                min: 0,
+                max: initialData.labels.length - 1,
+                values: [0, initialData.labels.length - 1],
+                slide: function(event, ui) {
+                    updateChart(ui.values[0], ui.values[1]);
+                    updateRangeInfo(ui.values[0], ui.values[1]);
+                }
+            });
+            // Initial range info update
+            updateRangeInfo(0, initialData.labels.length - 1);
+        });
+
+        function updateChart(startIdx, endIdx) {
+            var newData = {
+                labels: initialData.labels.slice(startIdx, endIdx + 1),
+                datasets: [{
+                    label: 'Sales Volume',
+                    data: initialData.datasets[0].data.slice(startIdx, endIdx + 1),
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                }]
+            };
+
+            myChart.data = newData;
+            myChart.update();
+        }
+
+        function updateRangeInfo(startIdx, endIdx) {
+            var handles = $('.ui-slider-handle');
+            $(handles[0]).html('<span class="range-info">' + initialData.labels[startIdx] + '</span>');
+            $(handles[1]).html('<span class="range-info">' + initialData.labels[endIdx] + '</span>');
+        }
+    </script>
+</body>
+</html>

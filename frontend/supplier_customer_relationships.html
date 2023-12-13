@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier - Customer Relationships</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/openlayers/dist/ol.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <div class="inputs-section">
+                <div class="header">
+                    <div class="logo-title-container">
+                        <img src="imgs/bag.png" alt="MarketPulse360 Logo" class="logo">
+                        <h1>MarketPulse360</h1>
+                    </div>
+                    <div class="home-title-container">
+                        <h1>Home</h1>
+                        <a href="main.html"><img src="imgs/home.png" alt="Home" class="home-icon"></a>
+                    </div>
+                    
+                </div>
+                <h2 class="title">Supplier - Customer Relationships</h2>
+                <div class="inputs">
+                    <div class="input-group">
+                        <label for="supplier">Supplier Name</label>
+                        <select id="supplier">
+                            <option value="Asus">Asus</option>
+                            <option value="Acer">Acer</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="customer-id">Customer ID</label>
+                        <input type="text" id="customer-id">
+                    </div>
+                    <div class="input-group">
+                        <label for="date-range">Date Range for Transactions</label>
+                        <input type="date" id="start-date">
+                        <input type="date" id="end-date">
+                    </div>
+                </div>
+                <button id="submit">Submit</button>
+            </div>
+        </div>
+        <div class="right-section">
+            <div class="network-graph">
+                <h3 class="section-title">Supplier-wise Breakdown of Customer Purchases</h3> <!-- Title for the Network Graph -->
+                <div id="network-graph"></div>
+            </div>
+            <div id="map2" class="map-section2"></div> <!-- Map Section -->
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            // D3.js Network Graph
+            const nodes = [{ id: "Asus" }, { id: "Product1" }, { id: "Product2" }];
+            const links = [
+                { source: "Asus", target: "Product1", value: Math.random() * 100 },
+                { source: "Asus", target: "Product2", value: Math.random() * 100 }
+            ];
+
+            const linkDistance = 200;
+            const width = document.getElementById("network-graph").clientWidth;
+            const height = 400;
+
+            // Function to calculate node radius
+            function getNodeRadius(id) {
+                return Math.max(20, id.length * 6); // Adjust as needed
+            }
+
+            const svg = d3.select("#network-graph").append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .call(d3.zoom().on("zoom", function (event) {
+                    svg.attr("transform", event.transform);
+                }))
+                .append("g");
+
+            // Adjust the colorScale to start from a darker shade
+            const colorScale = d3.scaleSequential((t) => d3.interpolateBlues(0.5 + t * 0.5))
+                .domain([0, 100]); // Assuming 'value' is between 0 and 100
+
+            // Define a scale for the link stroke width
+            const strokeWidthScale = d3.scaleLinear()
+                .domain([0, d3.max(links, d => d.value)])
+                .range([1, 5]); // Adjust the range as needed (min width to max width)
+
+            const simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(linkDistance))
+                .force("charge", d3.forceManyBody())
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            const linkGroup = svg.append("g")
+                .attr("class", "links")
+                .selectAll("g")
+                .data(links)
+                .join("g");
+
+            const link = linkGroup.append("line")
+                .attr("stroke-width", d => strokeWidthScale(d.value))
+                .attr("stroke", d => colorScale(d.value));
+
+            // Add text to display the number of products on each link
+            const linkText = linkGroup.append("text")
+                .text(d => d.value.toFixed(0)) // Round the value to an integer
+                .attr("fill", "black") // Text color
+                .attr("font-size", 20) // Adjust font size as needed
+                .attr("text-anchor", "middle"); // Center the text on the link
+
+            const node = svg.append("g")
+                .selectAll("circle")
+                .data(nodes)
+                .join("circle")
+                .attr("r", d => getNodeRadius(d.id))
+                .attr("fill", "#69b3a2");
+
+            const label = svg.append("g")
+                .selectAll("text")
+                .data(nodes)
+                .join("text")
+                .text(d => d.id)
+                .attr("text-anchor", "middle") // Center text horizontally
+                .attr("dominant-baseline", "central") // Center text vertically
+                .attr("font-size", 20)
+                .attr("fill", "white"); // Text color
+
+            simulation.on("tick", () => {
+                link.attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                linkText
+                    .attr("x", d => (d.source.x + d.target.x) / 2)
+                    .attr("y", d => (d.source.y + d.target.y) / 2);
+
+                node.attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+
+                label.attr("transform", d => `translate(${d.x}, ${d.y})`);
+            });
+        });
+
+
+
+        // ... Map Setup ...
+
+        var map = new ol.Map({
+            target: 'map2', // Ensure this ID matches the map container
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.XYZ({
+                        attributions: '© MapTiler © OpenStreetMap contributors',
+                        url: 'https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=uIMFZoCyLmKWTvmPj2JG',
+                        maxZoom: 19
+                    })
+                })
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([121, 23.5]), // Center on Taiwan
+                zoom: 7 // Adjust zoom level as needed
+            })
+        });
+
+        // ...
+
+
+
+    </script>
+    
+    
+    
+</body>
+</html>
