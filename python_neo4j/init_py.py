@@ -37,8 +37,6 @@ class neo4jConnection:
             add_query = qtool.get_add_product_csv_files()["query"]
             session.run(add_query)
 
-        # TODO: what to do when product not in list?
-
     def fetch_data(self, func_name, params):
         query_data = getattr(qtool, func_name)()
         query_parameters = {}
