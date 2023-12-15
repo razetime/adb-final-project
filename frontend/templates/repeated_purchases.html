@@ -1,0 +1,143 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repeated Purchases in Districts of a City</title>
+    <!-- Update the link to your CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/openlayers/dist/ol.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="inputs-section">
+            <div class="header">
+                <div class="logo-title-container">
+                    <!-- Update the image source path -->
+                    <img src="{{ url_for('static', filename='imgs/bag.png') }}" alt="MarketPulse360 Logo" class="logo">
+                    <h1>MarketPulse360</h1>
+                </div>
+                <div class="home-title-container">
+                    <h1>Home</h1>
+                    <!-- Update the image source path -->
+                    <a href="javascript:history.back()">
+                        <img src="{{ url_for('static', filename='imgs/home.png') }}" alt="Home" class="home-icon">
+                    </a>
+                </div>
+            </div>
+            <h2 class="title">Repeated Purchases in Districts of a City</h2>
+            <div class="inputs">
+                <div class="input-group">
+                    <label for="city">City</label>
+                    <select id="city">
+                        {% for city in cities %}
+                            <option value="{{ city }}">{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="supplier">Supplier Name</label>
+                    <select id="supplier">
+                        {% for supplier in suppliers %}
+                            <option value="{{ supplier }}">{{ supplier }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="product">Product Name</label>
+                    <select id="product">
+                        {% for product in products %}
+                            <option value="{{ product }}">{{ product }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="timeframe">Time Frame</label>
+                    <select id="timeframe">
+                        {% for timeframe in timeframes %}
+                            <option value="{{ timeframe }}">{{ timeframe }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button id="submit">Submit</button>
+        </div>
+        <div id="map" class="map-section"></div>
+    </div>
+
+    <script type="text/javascript">
+        // Initialize OpenLayers Map
+        var map = new ol.Map({
+            target: 'map', // ID of the map container
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.XYZ({
+                        attributions: '© MapTiler © OpenStreetMap contributors',
+                        url: 'https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=uIMFZoCyLmKWTvmPj2JG', // Your MapTiler API Key
+                        maxZoom: 19
+                    })
+                })
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([121, 23.5]), // Centered more closely on Taiwan
+                zoom: 8 // Adjust zoom level as needed
+            })
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#supplier').change(function() {
+                var selectedSupplier = $(this).val();
+                $.ajax({
+                    url: "{{ url_for('get_products') }}",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ supplier: selectedSupplier }),
+                    dataType: "json",
+                    success: function(response) {
+                        var productSelect = $('#product');
+                        productSelect.empty();
+                        $.each(response.products, function(index, product) {
+                            productSelect.append($('<option>', { 
+                                value: product,
+                                text : product 
+                            }));
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#submit').click(function() {
+                var selectedCity = $('#city').val();
+                var selectedSupplier = $('#supplier').val();
+                var selectedProduct = $('#product').val();
+                var selectedTimeframe = $('#timeframe').val();
+    
+                $.ajax({
+                    url: "{{ url_for('update_map_repeated_purchases') }}", // This URL should correspond to the Flask route
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ 
+                        city: selectedCity, 
+                        supplier: selectedSupplier, 
+                        product: selectedProduct, 
+                        timeframe: selectedTimeframe 
+                    }),
+                    dataType: "json",
+                    success: function(response) {
+                        // Placeholder for map update logic
+                        // Update the map here based on the response
+                    }
+                });
+            });
+        });
+    </script>
+    
+</body>
+</html>

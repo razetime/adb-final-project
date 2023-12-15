@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Series Analysis of Product Sales</title>
+    <!-- Update the link to your CSS file -->
+    <!-- Load jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Load jQuery UI -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <!-- jQuery UI CSS -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="inputs-section">
+            <div class="header">
+                <div class="logo-title-container">
+                    <!-- Update the image source path -->
+                    <img src="{{ url_for('static', filename='imgs/bag.png') }}" alt="MarketPulse360 Logo" class="logo">
+                    <h1>MarketPulse360</h1>
+                </div>
+                <div class="home-title-container">
+                    <h1>Home</h1>
+                    <!-- Use JavaScript to go back to the previous page -->
+                    <a href="javascript:history.back()">
+                        <img src="{{ url_for('static', filename='imgs/home.png') }}" alt="Home" class="home-icon">
+                    </a>
+                </div>
+            </div>
+            <h2 class="title">Time Series Analysis of Product Sales</h2>
+            <div class="inputs">
+                <div class="input-group">
+                    <label for="supplier">Supplier Name</label>
+                    <select id="supplier">
+                        {% for supplier in suppliers %}
+                            <option value="{{ supplier }}">{{ supplier }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="product">Product Name</label>
+                    <select id="product">
+                        {% for product in products %}
+                            <option value="{{ product }}">{{ product }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="timeframe">Time Frame</label>
+                    <select id="timeframe">
+                        {% for timeframe in timeframes %}
+                            <option value="{{ timeframe }}">{{ timeframe }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button id="submit">Submit</button>
+        </div>
+        <div class="chart-section">
+            <div class="chart-container">
+                <canvas id="myChart" width="700" height="500"></canvas>
+                <div class="slider-container">
+                    <div class="min-max-info" id="min-info"></div>
+                    <div id="slider-range"></div>
+                    <div class="min-max-info" id="max-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#supplier').change(function() {
+                var selectedSupplier = $(this).val();
+                $.ajax({
+                    url: "{{ url_for('get_products') }}",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ supplier: selectedSupplier }),
+                    dataType: "json",
+                    success: function(response) {
+                        var productSelect = $('#product');
+                        productSelect.empty();
+                        $.each(response.products, function(index, product) {
+                            productSelect.append($('<option>', { 
+                                value: product,
+                                text : product 
+                            }));
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        var myChart; // Declare myChart globally
+    
+        $(document).ready(function() {
+            $('#submit').click(function() {
+                // Get input values
+                var supplier = $('#supplier').val();
+                var product = $('#product').val();
+                var timeframe = $('#timeframe').val();
+    
+                // Send data to Flask
+                $.ajax({
+                    url: "{{ url_for('get_time_series_data') }}",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ supplier: supplier, product: product, timeframe: timeframe }),
+                    dataType: "json",
+                    success: function(response) {
+                        // If chart already exists, destroy it
+                        if (myChart) {
+                            myChart.destroy();
+                        }
+    
+                        // Create a new chart with the received data
+                        var ctx = document.getElementById('myChart').getContext('2d');
+                        myChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: response.labels,
+                                datasets: [{
+                                    label: 'Sales Volume',
+                                    data: response.data,
+                                    borderColor: 'rgba(0, 123, 255, 1)',
+                                    backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true
+                                    }
+                                }
+                            }
+                        });
+    
+                        // Initialize or update slider range and info
+                        $("#slider-range").slider({
+                            range: true,
+                            min: 0,
+                            max: response.labels.length - 1,
+                            values: [0, response.labels.length - 1],
+                            create: function() {
+                                // Add text labels on slider creation
+                                var labels = response.labels;
+                                var handles = $("#slider-range .ui-slider-handle");
+                                $(handles[0]).append('<div class="slider-label">' + labels[0] + '</div>');
+                                $(handles[1]).append('<div class="slider-label">' + labels[labels.length - 1] + '</div>');
+                            },
+                            slide: function(event, ui) {
+                                // Update chart and labels during sliding
+                                var slicedLabels = response.labels.slice(ui.values[0], ui.values[1] + 1);
+                                var slicedData = response.data.slice(ui.values[0], ui.values[1] + 1);
+                                updateChart(slicedLabels, slicedData);
+
+                                // Update slider labels
+                                var handles = $("#slider-range .ui-slider-handle");
+                                $(handles[0]).find('.slider-label').text(response.labels[ui.values[0]]);
+                                $(handles[1]).find('.slider-label').text(response.labels[ui.values[1]]);
+                            }
+                        });
+                        // Update slider labels immediately after data is loaded
+                        updateSliderLabels(response.labels);
+    
+                        // Update the min-max info labels
+                        $("#min-info").text('Min: ' + response.labels[0]);
+                        $("#max-info").text('Max: ' + response.labels[response.labels.length - 1]);
+                    }
+                });
+            });
+    
+            function updateChart(labels, data) {
+                myChart.data.labels = labels;
+                myChart.data.datasets[0].data = data;
+                myChart.update();
+            }
+
+            function updateSliderLabels(labels) {
+                var handles = $("#slider-range .ui-slider-handle");
+                $(handles[0]).find('.slider-label').text(labels[0]);
+                $(handles[1]).find('.slider-label').text(labels[labels.length - 1]);
+            }
+        });
+    </script>
+</body>
+</html>

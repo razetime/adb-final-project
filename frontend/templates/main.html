@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketPulse360</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='imgs/bag.png') }}" alt="MarketPulse360 Logo" class="logo">
+        <h1>MarketPulse360</h1>
+    </header>
+    <section class="description">
+        <p>MarketPulse360 offers insightful analysis of consumer purchasing patterns, supply chain dynamics, and sales trends over time. It helps businesses understand customer preferences, manage inventory efficiently, and craft effective marketing strategies. Additionally, it aids in understanding supplier-customer relationships and conducting comprehensive time series analysis for strategic planning.</p>
+    </section>
+    <nav>
+        <ul>
+            <li><a href="repeated_purchases">Repeated Purchases in Districts of a City</a></li>
+            <li><a href="supplier_customer_relationships">Supplier - Customer Relationships</a></li>
+            <li><a href="time_series_analysis">Time Series Analysis of Product Sales</a></li>
+        </ul>
+    </nav>
+</body>
+</html>
