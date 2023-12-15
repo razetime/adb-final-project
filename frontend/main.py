@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import random
+import requests
 
 app = Flask(__name__)
 
@@ -10,7 +11,7 @@ def home():
 @app.route('/repeated_purchases')
 def repeated_purchases():
     cities = ["Kaohsiung", "New Taipei", "Taichung", "Tainan", "Taipei", "Taoyuan", "Chiayi", "Hsinchu", "Keelung", "Changhua", "Douliu", "Hualien", "Magong", "Miaoli", "Nantou", "Pingtung", "Puzi", "Taibao", "Taitung", "Toufen", "Yilan", "Yuanlin", "Zhubei"]
-    suppliers = ["Asus", "Acer"]
+    suppliers = ["All", "Asus", "Acer"]
     products = ["VivoBook Pro 15", "ROG Zephyrus S17"]
     timeframes = ["Monthly", "Quarterly", "Yearly"]
 
@@ -24,16 +25,18 @@ def get_products():
         products = ["VivoBook Pro 15", "ROG Zephyrus S17"]
     elif supplier == "Acer":
         products = ["Swift Go 14", "Predator Helios 16"]
+    elif supplier == "All":
+        products = ["VivoBook Pro 15", "ROG Zephyrus S17", "Swift Go 14", "Predator Helios 16"]
     return jsonify(products=products)
 
 @app.route('/supplier_customer_relationships')
 def supplier_customer_relationships():
-    suppliers = ["Asus", "Acer"]
+    suppliers = ["All", "Asus", "Acer"]
     return render_template('supplier_customer_relationships.html', suppliers=suppliers)
 
 @app.route('/time_series_analysis')
 def time_series_analysis():
-    suppliers = ["Asus", "Acer"]
+    suppliers = ["All", "Asus", "Acer"]
     products = ["VivoBook Pro 15", "ROG Zephyrus S17"]
     timeframes = ["Daily", "Monthly", "Quarterly", "Yearly"]
 
@@ -48,30 +51,71 @@ def update_map_repeated_purchases():
     product = data.get('product')
     timeframe = data.get('timeframe')
 
-    # Process the data and prepare the response
-    # This is where you'll implement the logic to update the map
-    # For now, we'll just return the received data
+    # Fetch GeoJSON
+    url = 'https://api.maptiler.com/data/09e09097-be00-42f9-ae5e-af6db6815443/features.json?key=uIMFZoCyLmKWTvmPj2JG'
+    response = requests.get(url)
+    geojson_data = response.json()
+
+    # Process GeoJSON
+    processed_data = []
+    for feature in geojson_data['features']:
+        district = feature['properties']['District']
+        repeated_purchases = feature['properties']['Repeated Purchases']
+        coordinates = feature['geometry']['coordinates']
+
+        processed_data.append({
+            'district': district,
+            'repeated_purchases': repeated_purchases,
+            'coordinates': coordinates
+        })
+
+    # Calculate min and max repeated purchases
+    min_purchases = min(int(feature['properties']['Repeated Purchases']) for feature in geojson_data['features'])
+    max_purchases = max(int(feature['properties']['Repeated Purchases']) for feature in geojson_data['features'])
+
+    # Prepare and return the response data
     response_data = {
         'status': 'success',
-        'received': data
+        'received': data,  # Includes the data received from the AJAX request
+        'processed': processed_data,  # The processed GeoJSON data
+        'min_purchases': min_purchases,  # Minimum repeated purchases value
+        'max_purchases': max_purchases   # Maximum repeated purchases value
     }
     return jsonify(response_data)
+
 
 @app.route('/update_map_net_sc', methods=['POST'])
 def update_map_net_sc():
     data = request.json
     print("Received data:", data)  # This line prints the received data to the console
     customer = data.get('customer')
-    supplier = data.get('supplier')
     start_date = data.get('start_date')
     end_date = data.get('end_date')
+    selected_supplier = data.get('supplier')
 
-    # Process the data and prepare the response
-    # This is where you'll implement the logic to update the map
-    # For now, we'll just return the received data
+    # Fetch GeoJSON
+    url = 'https://api.maptiler.com/data/d3cd5f06-97f4-4333-9444-b62dd7f16f6c/features.json?key=uIMFZoCyLmKWTvmPj2JG'
+    response = requests.get(url)
+    geojson_data = response.json()
+
+    suppliers_data = []
+    customers_data = []
+
+    for feature in geojson_data['features']:
+        supplier = feature['properties']['Supplier']
+        customer_id = feature['properties']['Customer ID']
+
+        if supplier != "NA" and (selected_supplier == "All" or supplier == selected_supplier):
+            suppliers_data.append(feature)
+        elif customer_id != "NA":
+            feature['properties']['Customer ID']=customer
+            customers_data.append(feature)
+            print(customers_data)
+    # Prepare and return the response data
     response_data = {
         'status': 'success',
-        'received': data
+        'suppliers': suppliers_data,
+        'customers': customers_data
     }
     return jsonify(response_data)
 
