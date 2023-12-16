@@ -37,6 +37,15 @@ class neo4jConnection:
             add_query = qtool.get_add_product_csv_files()["query"]
             session.run(add_query)
 
+    def parse_to_obj(self, res_g) :
+        res_obj={"nodes":[], "relationships":[]}
+        for nod in res_g.nodes:
+            res_obj["nodes"].append({**nod._properties, **{"type":nod._labels, "element_id": nod.element_id}})
+        for rel in res_g.relationships:
+            rel_nodes= list(map(lambda x: x.element_id,rel.nodes))
+            res_obj["relationships"].append({**rel._properties, **{"type":rel.type, "nodes": rel_nodes, "element_id": nod.element_id}})
+        return res_obj
+
     def fetch_data(self, func_name, params):
         query_data = getattr(qtool, func_name)()
         query_parameters = {}
@@ -45,13 +54,7 @@ class neo4jConnection:
 
         session = self.driver.session(database=DATABASE)
         records = session.run(query_data["query"], query_parameters)
-        # records, _, _ = self.driver.execute_query(
-        #     query_=query_data["query"],
-        #     parameters_=query_parameters,
-        #     database_=DATABASE,
-        #     # result_transformer_=Result.consume
-        # )
-        return records
+        return self.parse_to_obj(records.graph())
     
     # TODO: visualize/go over results
     
