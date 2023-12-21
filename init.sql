@@ -149,5 +149,7 @@ create table sku_20120413 (
 );
 -- \copy sku_20120413 FROM '(�ӫ~�D��)sku_20120413.csv' WITH (FORMAT CSV,HEADER true,DELIMITER ',',NULL 'NULL');
 
+CREATE EXTENSION postgis;
+SELECT PostGIS_Full_Version();
 
 \l+ adb_final
