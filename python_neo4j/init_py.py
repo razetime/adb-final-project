@@ -1,8 +1,10 @@
 from neo4j import GraphDatabase, basic_auth, Result
 import os
 from dotenv import load_dotenv
+from graphviz import Digraph
 
 from . import get_queries_strings as qtool
+from . import get_set_data_queries as qsettool
 
 load_dotenv()
 
@@ -25,25 +27,33 @@ class neo4jConnection:
 
     def check_and_init_data(self):
         session = self.driver.session(database=DATABASE)
-        check_records= session.run(qtool.get_one_order()["query"])
+        check_records= session.run(qsettool.get_one_order()["query"])
         if not len(check_records.data()):
             print("add orders:")
-            add_query = qtool.get_add_order_csv_files()["query"]
+            add_query = qsettool.get_add_order_csv_files()["query"]
             session.run(add_query)
         
-        check_records= session.run(qtool.get_one_product()["query"])
+        check_records= session.run(qsettool.get_one_product()["query"])
         if not len(check_records.data()):
             print("add products:")
-            add_query = qtool.get_add_product_csv_files()["query"]
+            add_query = qsettool.get_add_product_csv_files()["query"]
+            session.run(add_query)
+
+        check_records= session.run(qsettool.get_one_cancel_order()["query"])
+        if not len(check_records.data()):
+            print("add cancelled orders:")
+            add_query = qsettool.get_add_cancel_orders_csv_files()["query"]
             session.run(add_query)
 
     def parse_to_obj(self, res_g) :
         res_obj={"nodes":[], "relationships":[]}
         for nod in res_g.nodes:
-            res_obj["nodes"].append({**nod._properties, **{"type":nod._labels, "element_id": nod.element_id}})
+            res_obj["nodes"].append({**nod._properties, **{"type":nod._labels, "element_id": nod.element_id[(nod.element_id.rfind(":") + 1):]}})
         for rel in res_g.relationships:
-            rel_nodes= list(map(lambda x: x.element_id,rel.nodes))
-            res_obj["relationships"].append({**rel._properties, **{"type":rel.type, "nodes": rel_nodes, "element_id": nod.element_id}})
+            rel_nodes= list(map(lambda x: x.element_id[(x.element_id.rfind(":") + 1):],rel.nodes))
+            res_obj["relationships"].append({**rel._properties, **{"type":rel.type, "nodes": rel_nodes, "element_id": nod.element_id[(nod.element_id.rfind(":") + 1):]}})
+        if len(res_obj["relationships"]):
+            res_obj["graph"] = self.get_graph_svg(res_obj)
         return res_obj
 
     def fetch_data(self, func_name, params):
@@ -56,6 +66,26 @@ class neo4jConnection:
         records = session.run(query_data["query"], query_parameters)
         return self.parse_to_obj(records.graph())
     
-    # TODO: visualize/go over results
+    def get_node_color(self, nod_type) :
+        if 'Product' in nod_type:
+            return 'red'
+        elif 'Order' in nod_type:
+            return 'blue'
+        else:
+            return 'black'
+
+    def get_graph_svg(self, graph):
+        f = Digraph('G', format='svg')
+        f.attr(rankdir='LR', size='10')
+        f.attr('node', shape='doublecircle')
+        for nod in graph["nodes"]:
+            f.node(name=nod["element_id"], label=nod["id"], color=self.get_node_color(nod["type"]))
+
+        f.attr('node', shape='circle')
+        for rel in graph["relationships"]:
+            f.edge(rel["nodes"][0], rel["nodes"][1], label=rel["type"])
+
+        return f
+
     
 
