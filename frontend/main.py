@@ -11,28 +11,30 @@ def home():
 @app.route('/repeated_purchases')
 def repeated_purchases():
     cities = ["Kaohsiung", "New Taipei", "Taichung", "Tainan", "Taipei", "Taoyuan", "Chiayi", "Hsinchu", "Keelung", "Changhua", "Douliu", "Hualien", "Magong", "Miaoli", "Nantou", "Pingtung", "Puzi", "Taibao", "Taitung", "Toufen", "Yilan", "Yuanlin", "Zhubei"]
-    suppliers = ["All", "Asus", "Acer"]
     products = ["VivoBook Pro 15", "ROG Zephyrus S17"]
     timeframes = ["Monthly", "Quarterly", "Yearly"]
+    # New data for the dropdowns
+    years = []
+    quarters = []
+    months = []
 
-    return render_template('repeated_purchases.html', cities=cities, suppliers=suppliers, products=products, timeframes=timeframes)
+    return render_template('repeated_purchases.html', cities=cities, products=products, timeframes=timeframes, years=years, quarters=quarters, months=months)
 
 @app.route('/get_products', methods=['POST'])
 def get_products():
-    supplier = request.json.get('supplier')
+    supplier_id = request.json.get('supplier_id')
     products = []
-    if supplier == "Asus":
+    if supplier_id == "Asus":
         products = ["VivoBook Pro 15", "ROG Zephyrus S17"]
-    elif supplier == "Acer":
+    elif supplier_id == "Acer":
         products = ["Swift Go 14", "Predator Helios 16"]
-    elif supplier == "All":
+    elif supplier_id == "All":
         products = ["VivoBook Pro 15", "ROG Zephyrus S17", "Swift Go 14", "Predator Helios 16"]
     return jsonify(products=products)
 
 @app.route('/supplier_customer_relationships')
 def supplier_customer_relationships():
-    suppliers = ["All", "Asus", "Acer"]
-    return render_template('supplier_customer_relationships.html', suppliers=suppliers)
+    return render_template('supplier_customer_relationships.html')
 
 @app.route('/time_series_analysis')
 def time_series_analysis():
@@ -47,9 +49,12 @@ def update_map_repeated_purchases():
     data = request.json
     print("Received data:", data)  # This line prints the received data to the console
     city = data.get('city')
-    supplier = data.get('supplier')
+    supplier_id = data.get('supplier_id')  # New field for Supplier ID
     product = data.get('product')
     timeframe = data.get('timeframe')
+    year = data.get('year')  # New field for Year
+    quarter = data.get('quarter')  # New field for Quarter
+    month = data.get('month')  # New field for Month
 
     # Fetch GeoJSON
     url = 'https://api.maptiler.com/data/09e09097-be00-42f9-ae5e-af6db6815443/features.json?key=uIMFZoCyLmKWTvmPj2JG'
@@ -91,7 +96,7 @@ def update_map_net_sc():
     customer = data.get('customer')
     start_date = data.get('start_date')
     end_date = data.get('end_date')
-    selected_supplier = data.get('supplier')
+    selected_supplier_id = data.get('supplier_id')
 
     # Fetch GeoJSON
     url = 'https://api.maptiler.com/data/d3cd5f06-97f4-4333-9444-b62dd7f16f6c/features.json?key=uIMFZoCyLmKWTvmPj2JG'
@@ -105,7 +110,7 @@ def update_map_net_sc():
         supplier = feature['properties']['Supplier']
         customer_id = feature['properties']['Customer ID']
 
-        if supplier != "NA" and (selected_supplier == "All" or supplier == selected_supplier):
+        if supplier != "NA" and (selected_supplier_id == "All" or supplier == selected_supplier_id):
             suppliers_data.append(feature)
         elif customer_id != "NA":
             feature['properties']['Customer ID']=customer
@@ -117,26 +122,27 @@ def update_map_net_sc():
         'suppliers': suppliers_data,
         'customers': customers_data
     }
+    print(response_data)
     return jsonify(response_data)
 
 @app.route('/get_network_data', methods=['POST'])
 def get_network_data():
     data = request.json
     customer = data.get('customer')
-    supplier = data.get('supplier')
+    supplier_id = data.get('supplier_id')
     start_date = data.get('start_date')
     end_date = data.get('end_date')
 
     # Generate nodes and links based on the supplier
     # For now, this is just a simple example
-    nodes = [{"id": supplier}]
+    nodes = [{"id": supplier_id}]
     links = []
 
     # Example: Generate random nodes and links
     for i in range(1, 5):  # Change 5 to the desired number of nodes
         product_name = f"Product{i}"
         nodes.append({"id": product_name})
-        links.append({"source": supplier, "target": product_name, "value": random.randint(10, 100)})
+        links.append({"source": supplier_id, "target": product_name, "value": random.randint(10, 100)})
 
     return jsonify({"nodes": nodes, "links": links})
 
@@ -144,7 +150,7 @@ def get_network_data():
 def get_time_series_data():
     data = request.json
     print("Received data:", data)
-    supplier = data.get('supplier')
+    supplier_id = data.get('supplier_id')
     product = data.get('product')
     timeframe = data.get('timeframe')
 

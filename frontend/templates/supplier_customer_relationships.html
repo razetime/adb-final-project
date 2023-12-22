@@ -34,16 +34,12 @@
                 <h2 class="title">Supplier - Customer Relationships</h2>
                 <div class="inputs">
                     <div class="input-group">
-                        <label for="supplier">Supplier Name</label>
-                        <select id="supplier">
-                            {% for supplier in suppliers %}
-                                <option value="{{ supplier }}">{{ supplier }}</option>
-                            {% endfor %}
-                        </select>
+                        <label for="supplier-id">Supplier ID</label>
+                        <input type="text" id="supplier-id" placeholder="Enter Supplier ID">
                     </div>
                     <div class="input-group">
                         <label for="customer-id">Customer ID</label>
-                        <input type="text" id="customer-id">
+                        <input type="text" id="customer-id" placeholder="Enter Customer ID">
                     </div>
                     <div class="input-group">
                         <label for="date-range">Date Range for Transactions</label>
@@ -87,7 +83,7 @@
             $('#submit').click(function(event) {
                 event.preventDefault();
 
-                var selectedSupplier = $('#supplier').val();
+                var selectedSupplierId = $('#supplier-id').val();
                 var selectedCustomer = $('#customer-id').val();
                 var selectedStartDate = $('#start-date').val();
                 var selectedEndDate = $('#end-date').val();
@@ -97,7 +93,7 @@
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify({ 
-                        supplier: selectedSupplier, 
+                        supplier_id: selectedSupplierId, 
                         customer: selectedCustomer,
                         start_date: selectedStartDate, 
                         end_date: selectedEndDate  
@@ -351,13 +347,13 @@
         $(document).ready(function() {
             $('#submit').click(function(event) {
                 event.preventDefault();  // Prevents the default form submission action
-                var selectedSupplier = $('#supplier').val();
+                var selectedSupplierId = $('#supplier-id').val();
                 var selectedCustomer = $('#customer-id').val();
                 var selectedStartDate = $('#start-date').val();
                 var selectedEndDate = $('#end-date').val();
 
                 // Form validation
-                if (!selectedSupplier || !selectedCustomer || !selectedStartDate || !selectedEndDate) {
+                if (!selectedSupplierId || !selectedCustomer || !selectedStartDate || !selectedEndDate) {
                     return;  // Stops the function if validation fails
                 }
 
@@ -367,7 +363,7 @@
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify({ 
-                    supplier: selectedSupplier, 
+                    supplier_id: selectedSupplierId, 
                     customer: selectedCustomer,
                     start_date: selectedStartDate, 
                     end_date: selectedEndDate 
@@ -477,13 +473,13 @@
         $('#submit').click(function(event) {
             event.preventDefault();  // Prevents the default form submission action
 
-            var selectedSupplier = $('#supplier').val();
+            var selectedSupplierId = $('#supplier-id').val();
             var selectedCustomer = $('#customer-id').val();
             var selectedStartDate = $('#start-date').val();
             var selectedEndDate = $('#end-date').val();
 
             // Form validation
-            if (!selectedSupplier || !selectedCustomer || !selectedStartDate || !selectedEndDate) {
+            if (!selectedSupplierId || !selectedCustomer || !selectedStartDate || !selectedEndDate) {
                 alert('Please fill all fields before submitting.');
                 return;  // Stops the function if validation fails
             }
@@ -494,7 +490,7 @@
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({ 
-                    supplier: selectedSupplier, 
+                    supplier_id: selectedSupplierId, 
                     customer: selectedCustomer,
                     start_date: selectedStartDate, 
                     end_date: selectedEndDate 
