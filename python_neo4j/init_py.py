@@ -27,23 +27,32 @@ class neo4jConnection:
 
     def check_and_init_data(self):
         session = self.driver.session(database=DATABASE)
+        check_records= session.run(qsettool.get_one_supplier()["query"])
+        if not len(check_records.data()):
+            print("add suppliers:")
+            add_query = qsettool.get_add_suppliers_csv_files()["query"]
+            session.run(add_query)
+
+        check_records= session.run(qsettool.get_one_product()["query"])
+        if not len(check_records.data()):
+            print("add products:")
+            add_query = qsettool.get_add_product_csv_files()["query"]
+            session.run(add_query)
+            index_query= qsettool.get_add_prod_index_query()["query"]
+            session.run(index_query)
+
         check_records= session.run(qsettool.get_one_order()["query"])
         if not len(check_records.data()):
             print("add orders:")
             add_query = qsettool.get_add_order_csv_files()["query"]
             session.run(add_query)
         
-        check_records= session.run(qsettool.get_one_product()["query"])
-        if not len(check_records.data()):
-            print("add products:")
-            add_query = qsettool.get_add_product_csv_files()["query"]
-            session.run(add_query)
-
         check_records= session.run(qsettool.get_one_cancel_order()["query"])
         if not len(check_records.data()):
             print("add cancelled orders:")
             add_query = qsettool.get_add_cancel_orders_csv_files()["query"]
             session.run(add_query)
+
 
     def parse_to_obj(self, res_g) :
         res_obj={"nodes":[], "relationships":[]}
