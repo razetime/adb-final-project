@@ -2,6 +2,7 @@ from neo4j import GraphDatabase, basic_auth, Result
 import os
 from dotenv import load_dotenv
 from graphviz import Digraph
+import time
 
 from . import get_queries_strings as qtool
 from . import get_set_data_queries as qsettool
@@ -26,32 +27,41 @@ class neo4jConnection:
         print('check_connectivity', res)
 
     def check_and_init_data(self):
+        start_time= time.time()
         session = self.driver.session(database=DATABASE)
         check_records= session.run(qsettool.get_one_supplier()["query"])
         if not len(check_records.data()):
             print("add suppliers:")
             add_query = qsettool.get_add_suppliers_csv_files()["query"]
             session.run(add_query)
+            print('finished adding suppliers at', time.time() - start_time)
 
         check_records= session.run(qsettool.get_one_product()["query"])
         if not len(check_records.data()):
             print("add products:")
             add_query = qsettool.get_add_product_csv_files()["query"]
             session.run(add_query)
-            index_query= qsettool.get_add_prod_index_query()["query"]
-            session.run(index_query)
+            index_query= qsettool.get_add_indexes_query()["query"]
+            try:
+                session.run(index_query)
+            except:
+                print("index creation failed")
+            print('finished adding products at', time.time() - start_time)
 
         check_records= session.run(qsettool.get_one_order()["query"])
         if not len(check_records.data()):
             print("add orders:")
             add_query = qsettool.get_add_order_csv_files()["query"]
-            session.run(add_query)
+            session.run(add_query) 
+            print('finished adding orders at', time.time() - start_time)
+
         
         check_records= session.run(qsettool.get_one_cancel_order()["query"])
         if not len(check_records.data()):
             print("add cancelled orders:")
             add_query = qsettool.get_add_cancel_orders_csv_files()["query"]
             session.run(add_query)
+            print('finished adding cancelled orders at', time.time() - start_time)
 
 
     def parse_to_obj(self, res_g) :

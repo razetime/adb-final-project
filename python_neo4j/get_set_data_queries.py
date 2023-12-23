@@ -8,10 +8,13 @@ return_query_no_params = qtool.return_query_no_params
 # consts:
 ALL_NODE_TYPES = ("Order", "Product", "CancelledOrder", "Supplier", "ParentOrder", "User")
 ORDER_FILES = ["order_2012Q1","order_2012Q2",
-               "order_2011Q1","order_2011Q2","order_2011Q3","order_2011Q4"]
+               "order_2011Q1","order_2011Q2","order_2011Q3","order_2011Q4"
+               ]
 CANCELLED_ORDERS_FILES=["4_Φ¿éσû«σÅûµ╢ê\\cancel_order"]
 WEARHOUSE_FILES=["3_σ»äσÇëσàÑσ║½µ¬ö\\stlend"]
-PRODUCT_FILES = ["2_σòåσôüµ¬ö\\product(σÇëσç║)"]
+PRODUCT_FILES = [
+    # "2_σòåσôüµ¬ö\\product(σÇëσç║)", 
+    "2_σòåσôüµ¬ö\\2012_product_list"]
 SUPPLIERS_FILES = ["1_Σ╛¢µçëσòå\\supplier"]
 PARENT_FOLDER = os.getenv('PARENT_FOLDER')
 
@@ -28,7 +31,7 @@ def get_one_supplier():
     return return_query_no_params("MATCH (c:Supplier) RETURN c LIMIT 1")
 
 def get_delete_all():
-    return return_query_no_params(f'MATCH (n) WHERE (n:{" OR n:".join(ALL_NODE_TYPES)}) DETACH DELETE n')
+    return return_query_no_params('CALL {MATCH (n) DETACH DELETE n} IN TRANSACTIONS OF 100000 ROWS')
 
 def get_add_order_csv_files():
     query=""
@@ -43,30 +46,35 @@ def get_add_order_csv_files():
             MERGE (parent_ord)-[:INCLUDE]->(ord_node)
             MERGE (u:User {id: ord.客戶代號})
             MERGE (u)-[:ORDERED]->(parent_ord)
-        } IN TRANSACTIONS OF 70000 ROWS"""
+        } IN TRANSACTIONS OF 2000 ROWS"""
     return return_query_no_params(query)
 
 def get_add_product_csv_files():
     query=""
+    index=0
     for i in PRODUCT_FILES:
-        query += "\nLOAD CSV WITH HEADERS FROM 'file:///" + PARENT_FOLDER + i + """.csv' as prod
-                MATCH (sup:Supplier {sup.id: prod.供應商編號})
-                CREATE (prod_node:Product {id: prod.商品編號, name: prod.商品名子}), (prod_node)-[:PRODUCES]->(sup)"""
-    
+        query += "\nLOAD CSV WITH HEADERS FROM 'file:///" + PARENT_FOLDER + i + """.csv' as prod_new
+                MATCH (sup:Supplier {id: prod_new.供應商編號})
+                CREATE (prod_node:Product {id: prod_new.商品編號, name: prod_new.商品名子}), (prod_node)-[:PRODUCES]->(sup)"""
+        index+=1
+
     return return_query_no_params(query)
 
-def get_add_prod_index_query():
-    return return_query_no_params('CREATE INDEX FOR (p:Product) ON (p.id)')
+def get_add_indexes_query():
+    return return_query_no_params("""CREATE INDEX FOR (p:Product) ON (p.id);
+                                  CREATE INDEX FOR (po:ParentOrder) ON (po.id);
+                                  CREATE INDEX FOR (u:User) ON (u.id);
+                                  CREATE INDEX FOR (s:Supplier) ON (s.id);""")
 
 def get_add_cancel_orders_csv_files():
     query=""
     for i in CANCELLED_ORDERS_FILES:
-        query += "\nLOAD CSV WITH HEADERS FROM 'file:///" + PARENT_FOLDER + i + """.csv' as ord
+        query += "\nLOAD CSV WITH HEADERS FROM 'file:///" + PARENT_FOLDER + i + """.csv' as c_ord
         CALL {
-            WITH ord
-            MATCH (po:ParentOrder {id: ord.RG單號})
-            CREATE (co:CancelledOrder {order_id: ord.RG單號, cancelllation_date: ord.取消日期, status: ord.proc_status, reason: ord.取消原因}), (co)-[:CANCELLING]->(po)
-        } IN TRANSACTIONS OF 100000 ROWS"""
+            WITH c_ord
+            MATCH (po:ParentOrder {id: c_ord.RG單號})
+            CREATE (co:CancelledOrder {order_id: c_ord.RG單號, cancelllation_date: c_ord.取消日期, status: c_ord.proc_status, reason: c_ord.取消原因}), (co)-[:CANCELLING]->(po)
+        } IN TRANSACTIONS OF 5000 ROWS"""
     
     return return_query_no_params(query)
 
@@ -77,6 +85,6 @@ def get_add_suppliers_csv_files():
         CALL {
             WITH sup
             CREATE (:Supplier {id: sup.供應商代號, name: sup.供應商名稱})
-        } IN TRANSACTIONS OF 100000 ROWS"""
+        } IN TRANSACTIONS OF 5000 ROWS"""
     
     return return_query_no_params(query)
