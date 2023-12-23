@@ -36,23 +36,16 @@ def get_products():
 
 @app.route('/supplier_customer_relationships')
 def supplier_customer_relationships():
-    timeframes = ["Monthly", "Quarterly"]
-    # New data for the dropdowns
-    years = []
-    quarters = []
-    months = []
-    return render_template('supplier_customer_relationships.html', timeframes=timeframes, years=years, quarters=quarters, months=months)
+    return render_template('supplier_customer_relationships.html')
 
 @app.route('/time_series_analysis')
 def time_series_analysis():
-    suppliers = ["All", "Asus", "Acer"]
-    products = []
     timeframes = ["Daily", "Monthly"]
     years = []
     quarters = []
     months = []
 
-    return render_template('time_series_analysis.html', suppliers=suppliers, products=products, timeframes=timeframes, years=years, quarters=quarters, months=months)
+    return render_template('time_series_analysis.html', timeframes=timeframes, years=years, quarters=quarters, months=months)
 
 @app.route('/update_map_repeated_purchases', methods=['POST'])
 def update_map_repeated_purchases():
@@ -164,94 +157,117 @@ def get_network_data():
     quarter = data.get('quarter')  # New field for Quarter
     month = data.get('month')  # New field for Month
     # Sample data resembling the output of a Neo4J query
-    # resdict = {
-    #     'nodes': [
-    #         {'sub_ord': 'RS1201200001022', 'id': 'RM1201200000625', 
-    #         'del_adr': '彰化縣社頭鄉崙雅村員集路一段800號', 'user': 'uNgJ6jJKw3pXIV569_pT_oQ-', 
-    #         'type': frozenset({'Order'}), 'element_id': '2854406'}, 
-    #         {'seller': '1012', 'name': 'CASIO 光動能輕薄型數位錶-金/39mm', 'id': '7290239', 
-    #         'type': frozenset({'Product'}), 'element_id': '36277'}, 
-    #         {'sub_ord': 'RS1201190021195', 'id': 'RM1201190013732', 
-    #         'del_adr': '台中市西屯區天水西街22號', 'user': 'Qo03MTjI1ws2wPVBgfrJvyQ-', 
-    #         'type': frozenset({'Order'}), 'element_id': '2437236'}, 
-    #         {'sub_ord': 'RS1201170012941', 'id': 'RM1201170008562', 
-    #         'del_adr': '桃園縣中壢市普義路217巷17號10樓', 'user': 'K875ScIYgwvIPD4MjmT0Tw--', 
-    #         'type': frozenset({'Order'}), 'element_id': '1711970'}, 
-    #         {'sub_ord': 'RS1201230004980', 'id': 'RM1201230003591', 
-    #         'del_adr': '台北市萬華區北市萬大路423巷45弄4號1樓', 'user': 'oUgXSdUS4n9ecf8saA--', 
-    #         'type': frozenset({'Order'}), 'element_id': '2246465'}, 
-    #         {'seller': '1012', 'name': 'CASIO 光動能輕薄型數位錶-39mm', 'id': '7290497', 
-    #         'type': frozenset({'Product'}), 'element_id': '36289'}, 
-    #         {'sub_ord': 'RS1201210000631', 'id': 'RM1201210000452', 
-    #         'del_adr': '台中市西區府後街1號6F-1', 'user': 'I6Txu80lg30t6aYbnEE-', 
-    #         'type': frozenset({'Order'}), 'element_id': '1500088'}, 
-    #         {'sub_ord': 'RS1201230021314', 'id': 'RM1201230014899', 
-    #         'del_adr': '彰化縣彰化市長順街40-2號', 'user': 'E5qLm9Og9QENDKDaG7VfSLA-', 
-    #         'type': frozenset({'Order'}), 'element_id': '1079963'}
-    #     ],
-    #     'relationships': [
-    #         {'type': 'PRODUCT', 'nodes': ['2854406', '36277'], 'element_id': '1079963'}, 
-    #         {'type': 'PRODUCT', 'nodes': ['2437236', '36277'], 'element_id': '1079963'}, 
-    #         {'type': 'PRODUCT', 'nodes': ['1711970', '36277'], 'element_id': '1079963'}, 
-    #         {'type': 'PRODUCT', 'nodes': ['2246465', '36289'], 'element_id': '1079963'}, 
-    #         {'type': 'PRODUCT', 'nodes': ['1500088', '36289'], 'element_id': '1079963'}, 
-    #         {'type': 'PRODUCT', 'nodes': ['1079963', '36289'], 'element_id': '1079963'}
-    #     ]
-    # }
-    # Generate nodes and links based on the supplier
-    # For now, this is just a simple example
-    if supplier_id=="All":
-        # Sample data for two suppliers and their products
-        suppliers = ["Asus", "Acer"]
-        asus_products = ["VivoBook", "ZenBook", "ROG Laptop"]
-        acer_products = ["Aspire", "Swift", "Predator"]
+    resdict = {
+        "nodes": 
+        [
+            {"id": "eBRIejoRT3q3.bSthUA9", "type": ["User"] ,"element_id": "8217280"}, 
+            {"datetime": "2012-06-15 22:34:00.000", "id": "39218011", "parent_ord_num": "RM1206150031411", "type": ["ParentOrder"], "element_id": "8217279"}, 
+            {"ship_method": "倉出", "id": "RS1206150047841", "type": ["Order"], "element_id": "8217278"}, 
+            {"name": "Delonghi 迪朗奇多功能磨豆機 KG40", "id": "7320052", "type": ["Product"], "element_id": "9761"}, 
+            {"name": "新各界企業有限公司", "id": "505", "type": ["Supplier"], "element_id": "13"}, 
+            {"datetime": "2012-06-15 22:34:00.000", "id": "39218011", "parent_ord_num": "RM1206150031412", "type": ["ParentOrder"], "element_id": "8217282"}, 
+            {"ship_method": "倉出", "id": "RS1206150047842", "type": ["Order"], "element_id": "8217281"}, 
+            {"name": "迪朗奇義式濃縮半自動咖啡機 EC155", "id": "7320016", "type": ["Product"], "element_id": "9760"}
+        ], 
+        "relationships": 
+        [
+            {"type": "ORDERED", "nodes": ["8217280", "8217279"], "element_id": "9760"}, 
+            {"type": "INCLUDE", "nodes": ["8217279", "8217278"], "element_id": "9760"}, 
+            {"type": "CONTAIN", "nodes": ["8217278", "9761"], "element_id": "9760"}, 
+            {"type": "PRODUCES", "nodes": ["9761", "13"], "element_id": "9760"}, 
+            {"type": "ORDERED", "nodes": ["8217280", "8217282"], "element_id": "9760"}, 
+            {"type": "INCLUDE", "nodes": ["8217282", "8217281"], "element_id": "9760"}, 
+            {"type": "CONTAIN", "nodes": ["8217281", "9760"], "element_id": "9760"}, 
+            {"type": "PRODUCES", "nodes": ["9760", "13"], "element_id": "9760"}
+        ]
+    }
 
-        # Initialize nodes with suppliers
-        nodes = [{"id": supplier} for supplier in suppliers]
+    # # Generate nodes and links based on the supplier
+    # # For now, this is just a simple example
+    # if supplier_id=="All":
+    #     # Sample data for two suppliers and their products
+    #     suppliers = ["Asus", "Acer"]
+    #     asus_products = ["VivoBook", "ZenBook", "ROG Laptop"]
+    #     acer_products = ["Aspire", "Swift", "Predator"]
 
-        # Initialize links
-        links = []
+    #     # Initialize nodes with suppliers
+    #     nodes = [{"id": supplier} for supplier in suppliers]
 
-        # Add products and links for Asus
-        for product in asus_products:
-            nodes.append({"id": product})
-            links.append({"source": "Asus", "target": product, "value": random.randint(10, 100)})
+    #     # Initialize links
+    #     links = []
 
-        # Add products and links for Acer
-        for product in acer_products:
-            nodes.append({"id": product})
-            links.append({"source": "Acer", "target": product, "value": random.randint(10, 100)})
-    else:
-        nodes = [{"id": supplier_id}]
-        links = []
+    #     # Add products and links for Asus
+    #     for product in asus_products:
+    #         nodes.append({"id": product})
+    #         links.append({"source": "Asus", "target": product, "value": random.randint(10, 100)})
 
-        # Example: Generate random nodes and links
-        for i in range(1, 5):  # Change 5 to the desired number of nodes
-            product_name = f"Product{i}"
-            nodes.append({"id": product_name})
-            links.append({"source": supplier_id, "target": product_name, "value": random.randint(10, 100)})
+    #     # Add products and links for Acer
+    #     for product in acer_products:
+    #         nodes.append({"id": product})
+    #         links.append({"source": "Acer", "target": product, "value": random.randint(10, 100)})
+    # else:
+    #     nodes = [{"id": supplier_id}]
+    #     links = []
+
+    #     # Example: Generate random nodes and links
+    #     for i in range(1, 5):  # Change 5 to the desired number of nodes
+    #         product_name = f"Product{i}"
+    #         nodes.append({"id": product_name})
+    #         links.append({"source": supplier_id, "target": product_name, "value": random.randint(10, 100)})
+
     # Assuming resdict is already defined or received from another source
-    #nodes, links = process_data_for_graph(resdict)
-
+    nodes, links = process_data_for_graph(resdict)
+    print("nodes: ", nodes, "links: ", links)
     return jsonify({"nodes": nodes, "links": links})
 
-# #Function that will process the data coming from Neo4J
-# def process_data_for_graph(resdict):
-#     # Extract nodes
-#     nodes = resdict["nodes"]
+#Function that will process the data coming from Neo4J
+def process_data_for_graph(resdict):
+    # Extract and format nodes using element_id as the unique identifier
+    nodes = []
+    for node in resdict["nodes"]:
+        node_info = {
+            "id": node["element_id"],  # Use element_id as the unique identifier
+            "group": node["type"][0],
+        }
+        # Additional properties based on type
+        if node_info["group"] == "User":
+            node_info["customer_id"] = node.get("id", "")
+        elif node_info["group"] == "ParentOrder":
+            node_info["parent_ord_id"] = node.get("id", "")
+            node_info["datetime"] = node.get("datetime", "")
+            node_info["parent_ord_num"] = node.get("parent_ord_num", "")
+        elif node_info["group"] == "Order":
+            node_info["order_id"] = node.get("id", "")
+            node_info["ship_method"] = node.get("ship_method", "")
+        elif node_info["group"] == "Product":
+            node_info["prod_id"] = node.get("id", "")
+            node_info["name"] = node.get("name", "")
+        elif node_info["group"] == "Supplier":
+            node_info["supplier_id"] = node.get("id", "")
+            node_info["ship_method"] = node.get("ship_method", "")
+            node_info["name"] = node.get("name", "")
+        
+        nodes.append(node_info)
 
-#     # Extract relationships
-#     links = []
-#     for relation in resdict["relationships"]:
-#         link = {
-#             "source": relation["nodes"][0],  # Assuming first element is the source
-#             "target": relation["nodes"][1],  # Assuming second element is the target
-#             "type": relation["type"],        # Type of relationship
-#             "value": random.randint(10, 100) # You can customize this value
-#         }
-#         links.append(link)
+    # Extract and format relationships using element_id
+    links = []
+    for relation in resdict["relationships"]:
+        source_id = next((node["id"] for node in nodes if node["id"] == relation["nodes"][0]), None)
+        target_id = next((node["id"] for node in nodes if node["id"] == relation["nodes"][1]), None)
+        if source_id and target_id:
+            link = {
+                "source": source_id,
+                "target": target_id,
+                "type": relation["type"]
+            }
+            links.append(link)
 
-#     return nodes, links
+    return nodes, links
+
+
+
+
+
 
 @app.route('/get_time_series_data', methods=['POST'])
 def get_time_series_data():
