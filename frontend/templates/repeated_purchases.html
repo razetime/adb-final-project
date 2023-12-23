@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Repeated Purchases in Districts of a City</title>
+    <title>Repeated Purchases in all cities in a tsime period</title>
     <!-- Update the link to your CSS file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/openlayers/dist/ol.js"></script>
@@ -28,17 +28,17 @@
                     </a>
                 </div>
             </div>
-            <h2 class="title">Repeated Purchases in Districts of a City</h2>
+            <h2 class="title">Repeated Purchases in Cities of Taiwan</h2>
             <div class="inputs-container">
                 <div class="inputs">
-                    <div class="input-group">
+                    <!-- <div class="input-group">
                         <label for="city">City</label>
                         <select id="city">
                             {% for city in cities %}
                                 <option value="{{ city }}">{{ city }}</option>
                             {% endfor %}
                         </select>
-                    </div>
+                    </div> -->
                     
                     <!-- <div class="input-group">
                         <label for="supplier-id">Supplier ID</label>
@@ -137,13 +137,13 @@
                 if (type === 'Polygon') {
                     coordinates = geometry.getInteriorPoint().getCoordinates(); // Get centroid of the polygon
                 } else {
-                    coordinates = geometry.getCoordinates();
+                    coordinates = (new ol.geom.Polygon(geometry.getCoordinates()[0])).getInteriorPoint().getCoordinates();
                 }
                 //Content that will show in the popup
-                var district = feature.get('district');
+                var city = feature.get('city');
                 var repeatedPurchases = feature.get('repeated_purchases');
 
-                popupContent.innerHTML = '<p><strong>District:</strong> ' + district + '</p><p><strong>Repeated Purchases:</strong> ' + repeatedPurchases + '</p>';
+                popupContent.innerHTML = '<p><strong>City:</strong> ' + city + '</p><p><strong>Repeated Purchases:</strong> ' + repeatedPurchases + '</p>';
                 overlay.setPosition(coordinates); // Position the popup at the centroid of the polygon
             } else {
                 overlay.setPosition(undefined); // Hide the popup if no feature was clicked
@@ -261,6 +261,7 @@
                     }),
                     dataType: "json",
                     success: function(response) {
+                        console.log(response);
                         if (response.status === 'success') {
                             var minPurchases = response.min_purchases;
                             var maxPurchases = response.max_purchases;
@@ -270,11 +271,11 @@
                                 .forEach(layer => map.removeLayer(layer));
 
                             var features = response.processed.map(function(item) {
-                                var polygon = new ol.geom.Polygon(item.coordinates);
+                                var polygon = new ol.geom.MultiPolygon(item.coordinates);
                                 polygon.transform('EPSG:4326', 'EPSG:3857');
                                 var feature = new ol.Feature({
                                     geometry: polygon,
-                                    district: item.district,
+                                    city: item.city,
                                     repeated_purchases: item.repeated_purchases,
                                 });
                                 return feature;
