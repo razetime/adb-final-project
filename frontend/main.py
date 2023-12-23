@@ -14,7 +14,7 @@ def repeated_purchases():
     cities = ['新北', '新社', '高門', '鄰環', '昌路', '苗栗', '長門', '大里', '高雄', '南投', '際富', '中村', '埔門', '螺鎮', '村新', '時村', '鄉高', '新都', '西路', '鮮超', '傳門', '鎮美', '馬公', '苑門', '大學', '永康', '鄉南', '里新', '仙門', '林超', '成門', '圍魚', '療門', '吉村', '學門', '岐超', '生路', '康超', '鄉後', '華門', '村盛', '池門', '中壢', '山門', '埔榮', '專前', '零售', '會門', '安里', '好超', '寶門', '巢鄉', '福門', '林縣', '東路', '嘉義', '第一', '里環', '青超', '台中', '集鎮', '玉田', '上鄉', '村南', '鄉新', '冠門', '路舊', '宜蘭', '仁門', '第二', '訓門', '上村', '美村', '豊里', '青門', '洲門', '泰門', '中門', '藥門', '金門', '洋門', '鎮環', '綜合', '斗六', '產品', '鄰新', '花蓮', '縣新', '購門', '興里', '昌門', '花門', '運門', '竹北', '欣超', '新竹', '朴子', '廣門', '美門', '降門', '村村', '德門', '果菜', '多摩', '臺南', '鄉中', '冠超', '鎮元', '台南', '樂村', '堂村', '鎮新', '大門', '份門', '文山', '燕村', '豐原', '豐里', '勝門', '大超', '心門', '里西', '太平', '園門', '山村', '臺中', '鳳山', '後村', '南環', '河鎮', '園超', '民超', '樹門', '境門', '台東', '楊梅', '林門', '內埔', '二段', '八德', '嵐門', '寮門', '平鎮', '民生', '豐門', '禮門', '村米', '彰化', '學都', '鎮中', '里美', '督門', '基隆', '新營', '慶門', '尾門', '海門', '屏東', '祥門', '台北', '山路', '桃園', '軒門', '南興', '公有', '街新', '鎮西', '會超', '太保', '興門', '大成', '梅鎮', '雅村', '路新']
     # products = ["VivoBook Pro 15", "ROG Zephyrus S17"]
 
-    timeframes = ["Monthly", "Quarterly", "Yearly"]
+    timeframes = ["Monthly", "Quarterly"]
     # New data for the dropdowns
     years = []
     quarters = []
@@ -36,15 +36,23 @@ def get_products():
 
 @app.route('/supplier_customer_relationships')
 def supplier_customer_relationships():
-    return render_template('supplier_customer_relationships.html')
+    timeframes = ["Monthly", "Quarterly"]
+    # New data for the dropdowns
+    years = []
+    quarters = []
+    months = []
+    return render_template('supplier_customer_relationships.html', timeframes=timeframes, years=years, quarters=quarters, months=months)
 
 @app.route('/time_series_analysis')
 def time_series_analysis():
     suppliers = ["All", "Asus", "Acer"]
     products = []
-    timeframes = ["Daily", "Monthly", "Quarterly", "Yearly"]
+    timeframes = ["Daily", "Monthly"]
+    years = []
+    quarters = []
+    months = []
 
-    return render_template('time_series_analysis.html', suppliers=suppliers, products=products, timeframes=timeframes)
+    return render_template('time_series_analysis.html', suppliers=suppliers, products=products, timeframes=timeframes, years=years, quarters=quarters, months=months)
 
 @app.route('/update_map_repeated_purchases', methods=['POST'])
 def update_map_repeated_purchases():
@@ -71,10 +79,6 @@ def update_map_repeated_purchases():
             geojson_data = query_monthly(int(year),quarter[1],[months.index(month)+1,product_id])
         case 'Quarterly':
             geojson_data = query_quarterly(int(year),quarter[1],[product_id])
-        case 'Yearly':
-            # query_yearly(int(year),[product_id])
-            geojson_data = []
-            pass
         
 
     # Process GeoJSON
@@ -117,8 +121,10 @@ def update_map_net_sc():
     data = request.json
     print("Received data:", data)  # This line prints the received data to the console
     customer = data.get('customer')
-    start_date = data.get('start_date')
-    end_date = data.get('end_date')
+    timeframe = data.get('timeframe')
+    year = data.get('year')  # New field for Year
+    quarter = data.get('quarter')  # New field for Quarter
+    month = data.get('month')  # New field for Month
     selected_supplier_id = data.get('supplier_id')
 
     # Fetch GeoJSON
@@ -138,14 +144,14 @@ def update_map_net_sc():
         elif customer_id != "NA":
             feature['properties']['Customer ID']=customer
             customers_data.append(feature)
-            print(customers_data)
+            #print(customers_data)
     # Prepare and return the response data
     response_data = {
         'status': 'success',
         'suppliers': suppliers_data,
         'customers': customers_data
     }
-    print(response_data)
+    #print(response_data)
     return jsonify(response_data)
 
 @app.route('/get_network_data', methods=['POST'])
@@ -153,8 +159,10 @@ def get_network_data():
     data = request.json
     customer = data.get('customer')
     supplier_id = data.get('supplier_id')
-    start_date = data.get('start_date')
-    end_date = data.get('end_date')
+    timeframe = data.get('timeframe')
+    year = data.get('year')  # New field for Year
+    quarter = data.get('quarter')  # New field for Quarter
+    month = data.get('month')  # New field for Month
     # Sample data resembling the output of a Neo4J query
     # resdict = {
     #     'nodes': [
@@ -192,14 +200,36 @@ def get_network_data():
     # }
     # Generate nodes and links based on the supplier
     # For now, this is just a simple example
-    nodes = [{"id": supplier_id}]
-    links = []
+    if supplier_id=="All":
+        # Sample data for two suppliers and their products
+        suppliers = ["Asus", "Acer"]
+        asus_products = ["VivoBook", "ZenBook", "ROG Laptop"]
+        acer_products = ["Aspire", "Swift", "Predator"]
 
-    # Example: Generate random nodes and links
-    for i in range(1, 5):  # Change 5 to the desired number of nodes
-        product_name = f"Product{i}"
-        nodes.append({"id": product_name})
-        links.append({"source": supplier_id, "target": product_name, "value": random.randint(10, 100)})
+        # Initialize nodes with suppliers
+        nodes = [{"id": supplier} for supplier in suppliers]
+
+        # Initialize links
+        links = []
+
+        # Add products and links for Asus
+        for product in asus_products:
+            nodes.append({"id": product})
+            links.append({"source": "Asus", "target": product, "value": random.randint(10, 100)})
+
+        # Add products and links for Acer
+        for product in acer_products:
+            nodes.append({"id": product})
+            links.append({"source": "Acer", "target": product, "value": random.randint(10, 100)})
+    else:
+        nodes = [{"id": supplier_id}]
+        links = []
+
+        # Example: Generate random nodes and links
+        for i in range(1, 5):  # Change 5 to the desired number of nodes
+            product_name = f"Product{i}"
+            nodes.append({"id": product_name})
+            links.append({"source": supplier_id, "target": product_name, "value": random.randint(10, 100)})
     # Assuming resdict is already defined or received from another source
     #nodes, links = process_data_for_graph(resdict)
 
@@ -230,16 +260,15 @@ def get_time_series_data():
     supplier_id = data.get('supplier_id')
     product_id = data.get('product-id')
     timeframe = data.get('timeframe')
+    year = data.get('year')  # New field for Year
+    quarter = data.get('quarter')  # New field for Quarter
+    month = data.get('month')  # New field for Month
 
     # Generate time series data based on the timeframe
     if timeframe == 'Daily':
         labels = [f'Day {i+1}' for i in range(31)]
     elif timeframe == 'Monthly':
         labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    elif timeframe == 'Quarterly':
-        labels = [f'Q{i+1}' for i in range(12)]
-    elif timeframe == 'Yearly':
-        labels = [f'Year {2000+i}' for i in range(12)]
     
     data = [random.randint(100, 500) for _ in labels]  # Random data for illustration
 
