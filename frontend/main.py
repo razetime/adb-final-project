@@ -11,14 +11,14 @@ def home():
 @app.route('/repeated_purchases')
 def repeated_purchases():
     cities = ["Kaohsiung", "New Taipei", "Taichung", "Tainan", "Taipei", "Taoyuan", "Chiayi", "Hsinchu", "Keelung", "Changhua", "Douliu", "Hualien", "Magong", "Miaoli", "Nantou", "Pingtung", "Puzi", "Taibao", "Taitung", "Toufen", "Yilan", "Yuanlin", "Zhubei"]
-    products = []
+    # products = []
     timeframes = ["Monthly", "Quarterly", "Yearly"]
     # New data for the dropdowns
     years = []
     quarters = []
     months = []
 
-    return render_template('repeated_purchases.html', cities=cities, products=products, timeframes=timeframes, years=years, quarters=quarters, months=months)
+    return render_template('repeated_purchases.html', cities=cities, timeframes=timeframes, years=years, quarters=quarters, months=months)
 
 @app.route('/get_products', methods=['POST'])
 def get_products():
@@ -49,8 +49,8 @@ def update_map_repeated_purchases():
     data = request.json
     print("Received data:", data)  # This line prints the received data to the console
     city = data.get('city')
-    supplier_id = data.get('supplier_id')  # New field for Supplier ID
-    product = data.get('product')
+    # supplier_id = data.get('supplier_id')  # New field for Supplier ID
+    product_id = data.get('product-id')
     timeframe = data.get('timeframe')
     year = data.get('year')  # New field for Year
     quarter = data.get('quarter')  # New field for Quarter
@@ -205,7 +205,7 @@ def get_time_series_data():
     data = request.json
     print("Received data:", data)
     supplier_id = data.get('supplier_id')
-    product = data.get('product')
+    product_id = data.get('product-id')
     timeframe = data.get('timeframe')
 
     # Generate time series data based on the timeframe

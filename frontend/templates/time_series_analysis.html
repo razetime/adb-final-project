@@ -35,18 +35,14 @@
             </div>
             <h2 class="title">Time Series Analysis of Product Sales</h2>
             <div class="inputs">
-                <div class="input-group">
+                <!-- <div class="input-group">
                     <label for="supplier-id">Supplier ID</label>
                     <input type="text" id="supplier-id" placeholder="Enter Supplier ID">
-                </div>
+                </div> -->
                 
                 <div class="input-group">
-                    <label for="product">Product Name</label>
-                    <select id="product">
-                        {% for product in products %}
-                            <option value="{{ product }}">{{ product }}</option>
-                        {% endfor %}
-                    </select>
+                    <label for="product-id">Product ID</label>
+                    <input type="text" id="product-id" placeholder="Enter Product ID">
                 </div>
                 
                 <div class="input-group">
@@ -72,7 +68,7 @@
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script>
+    <!-- <script>
         $(document).ready(function() {
             // Use '#supplier-id' for the text box
             $('#supplier-id').on('blur', function() {
@@ -96,7 +92,7 @@
                 });
             });
         });
-    </script>
+    </script> -->
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
@@ -107,7 +103,7 @@
             $('#submit').click(function() {
                 // Get input values
                 var supplier_id = $('#supplier-id').val();
-                var product = $('#product').val();
+                var product_id = $('#product-id').val();
                 var timeframe = $('#timeframe').val();
     
                 // Send data to Flask
@@ -115,7 +111,7 @@
                     url: "{{ url_for('get_time_series_data') }}",
                     type: "POST",
                     contentType: "application/json",
-                    data: JSON.stringify({ supplier_id: supplier_id, product: product, timeframe: timeframe }),
+                    data: JSON.stringify({ supplier_id: supplier_id, product_id: product_id, timeframe: timeframe }),
                     dataType: "json",
                     success: function(response) {
                         // If chart already exists, destroy it

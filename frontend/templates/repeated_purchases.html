@@ -40,18 +40,14 @@
                         </select>
                     </div>
                     
-                    <div class="input-group">
+                    <!-- <div class="input-group">
                         <label for="supplier-id">Supplier ID</label>
                         <input type="text" id="supplier-id" placeholder="Enter Supplier ID">
-                    </div>
+                    </div> -->
                     
                     <div class="input-group">
-                        <label for="product">Product Name</label>
-                        <select id="product">
-                            {% for product in products %}
-                                <option value="{{ product }}">{{ product }}</option>
-                            {% endfor %}
-                        </select>
+                        <label for="product-id">Product ID</label>
+                        <input type="text" id="product-id" placeholder="Enter Product ID">
                     </div>
                     
                     <div class="input-group">
@@ -157,7 +153,7 @@
     </script>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     
-    <script>
+    <!-- <script>
         $(document).ready(function() {
             // Use '#supplier-id' for the text box
             $('#supplier-id').on('blur', function() {
@@ -181,7 +177,7 @@
                 });
             });
         });
-    </script>
+    </script> -->
     <script>
         $(document).ready(function() {
             // Populate year, quarter, and month dropdowns
@@ -244,8 +240,8 @@
 
             $('#submit').click(function() {
                 var selectedCity = $('#city').val();
-                var selectedSupplierId = $('#supplier-id').val();
-                var selectedProduct = $('#product').val();
+                // var selectedSupplierId = $('#supplier-id').val();
+                var selectedProductId = $('#product-id').val();
                 var selectedTimeframe = $('#timeframe').val();
                 var selectedYear = $('#year').val();
                 var selectedQuarter = $('#quarter').val();
@@ -256,8 +252,8 @@
                     contentType: "application/json",
                     data: JSON.stringify({ 
                         city: selectedCity, 
-                        supplier_id: selectedSupplierId, 
-                        product: selectedProduct, 
+                        // supplier_id: selectedSupplierId, 
+                        product_id: selectedProductId, 
                         timeframe: selectedTimeframe,
                         year: selectedYear,
                         quarter: selectedQuarter,
