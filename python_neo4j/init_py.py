@@ -56,13 +56,22 @@ class neo4jConnection:
 
     def parse_to_obj(self, res_g) :
         res_obj={"nodes":[], "relationships":[]}
+        get_id = lambda x: x if not (x.rfind(":") + 1) else x[(x.rfind(":") + 1):]
         for nod in res_g.nodes:
-            res_obj["nodes"].append({**nod._properties, **{"type":nod._labels, "element_id": nod.element_id[(nod.element_id.rfind(":") + 1):]}})
+            try:
+                elm_id = (nod.element_id)
+            except:
+                elm_id = (nod.id)
+            res_obj["nodes"].append({**nod._properties, **{"type":nod._labels, "element_id": get_id(elm_id)}})
         for rel in res_g.relationships:
+            try:
+                elm_id = (nod.element_id)
+            except:
+                elm_id = (nod.id)
             rel_nodes= list(map(lambda x: x.element_id[(x.element_id.rfind(":") + 1):],rel.nodes))
-            res_obj["relationships"].append({**rel._properties, **{"type":rel.type, "nodes": rel_nodes, "element_id": nod.element_id[(nod.element_id.rfind(":") + 1):]}})
-        if len(res_obj["relationships"]):
-            res_obj["graph"] = self.get_graph_svg(res_obj)
+            res_obj["relationships"].append({**rel._properties, **{"type":rel.type, "nodes": rel_nodes, "element_id": get_id(elm_id)}})
+        # if len(res_obj["relationships"]):
+        #     res_obj["graph"] = self.get_graph_svg(res_obj)
         return res_obj
 
     def fetch_data(self, func_name, params):
@@ -73,6 +82,7 @@ class neo4jConnection:
 
         session = self.driver.session(database=DATABASE)
         records = session.run(query_data["query"], query_parameters)
+
         return self.parse_to_obj(records.graph())
     
     def get_node_color(self, nod_type) :
