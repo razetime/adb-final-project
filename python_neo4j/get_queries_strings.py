@@ -1,7 +1,8 @@
 QUERY_TYPES = {
     "ORDERS_OF_PRODUCT_NAME": "get_all_orders_with_product_name",
-    "ORDERS_OF_SUPPLIER": "get_supplier_all_relationships",
+    "ORDERS_FROM_SUPPLIER": "get_supplier_all_relationships",
     "SUPPLIER_USER_RELATIONSHIPS": "get_supplier_customer_relationships",
+    "SUPPLIER_SELLING_KEYWORD": "get_supplier_selling_keyword",
 }
 
 def return_query_no_params(quer):
@@ -34,5 +35,13 @@ def get_supplier_customer_relationships():
         "parameters": [
             'sup_id',
             'u_id'
+        ]
+    }
+
+def get_supplier_selling_keyword():
+    return {
+        "query": """MATCH (s:Supplier)-[relatedTo]-(p:Product) WHERE p.name CONTAINS $prod_name RETURN s, p, relatedTo""",
+        "parameters": [
+            'prod_name'
         ]
     }
