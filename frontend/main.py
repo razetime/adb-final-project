@@ -11,16 +11,23 @@ def home():
 
 @app.route('/repeated_purchases')
 def repeated_purchases():
-    cities = ['新北', '新社', '高門', '鄰環', '昌路', '苗栗', '長門', '大里', '高雄', '南投', '際富', '中村', '埔門', '螺鎮', '村新', '時村', '鄉高', '新都', '西路', '鮮超', '傳門', '鎮美', '馬公', '苑門', '大學', '永康', '鄉南', '里新', '仙門', '林超', '成門', '圍魚', '療門', '吉村', '學門', '岐超', '生路', '康超', '鄉後', '華門', '村盛', '池門', '中壢', '山門', '埔榮', '專前', '零售', '會門', '安里', '好超', '寶門', '巢鄉', '福門', '林縣', '東路', '嘉義', '第一', '里環', '青超', '台中', '集鎮', '玉田', '上鄉', '村南', '鄉新', '冠門', '路舊', '宜蘭', '仁門', '第二', '訓門', '上村', '美村', '豊里', '青門', '洲門', '泰門', '中門', '藥門', '金門', '洋門', '鎮環', '綜合', '斗六', '產品', '鄰新', '花蓮', '縣新', '購門', '興里', '昌門', '花門', '運門', '竹北', '欣超', '新竹', '朴子', '廣門', '美門', '降門', '村村', '德門', '果菜', '多摩', '臺南', '鄉中', '冠超', '鎮元', '台南', '樂村', '堂村', '鎮新', '大門', '份門', '文山', '燕村', '豐原', '豐里', '勝門', '大超', '心門', '里西', '太平', '園門', '山村', '臺中', '鳳山', '後村', '南環', '河鎮', '園超', '民超', '樹門', '境門', '台東', '楊梅', '林門', '內埔', '二段', '八德', '嵐門', '寮門', '平鎮', '民生', '豐門', '禮門', '村米', '彰化', '學都', '鎮中', '里美', '督門', '基隆', '新營', '慶門', '尾門', '海門', '屏東', '祥門', '台北', '山路', '桃園', '軒門', '南興', '公有', '街新', '鎮西', '會超', '太保', '興門', '大成', '梅鎮', '雅村', '路新']
-    # products = ["VivoBook Pro 15", "ROG Zephyrus S17"]
-
     timeframes = ["Monthly", "Quarterly"]
-    # New data for the dropdowns
     years = []
     quarters = []
     months = []
+    return render_template('repeated_purchases.html', timeframes=timeframes, years=years, quarters=quarters, months=months)
 
-    return render_template('repeated_purchases.html', cities=cities, timeframes=timeframes, years=years, quarters=quarters, months=months)
+@app.route('/supplier_customer_relationships')
+def supplier_customer_relationships():
+    return render_template('supplier_customer_relationships.html')
+
+@app.route('/time_series_analysis')
+def time_series_analysis():
+    timeframes = ["Daily", "Monthly"]
+    years = []
+    quarters = []
+    months = []
+    return render_template('time_series_analysis.html', timeframes=timeframes, years=years, quarters=quarters, months=months)
 
 @app.route('/get_products', methods=['POST'])
 def get_products():
@@ -33,19 +40,6 @@ def get_products():
     elif supplier_id == "All":
         products = ["VivoBook Pro 15", "ROG Zephyrus S17", "Swift Go 14", "Predator Helios 16"]
     return jsonify(products=products)
-
-@app.route('/supplier_customer_relationships')
-def supplier_customer_relationships():
-    return render_template('supplier_customer_relationships.html')
-
-@app.route('/time_series_analysis')
-def time_series_analysis():
-    timeframes = ["Daily", "Monthly"]
-    years = []
-    quarters = []
-    months = []
-
-    return render_template('time_series_analysis.html', timeframes=timeframes, years=years, quarters=quarters, months=months)
 
 @app.route('/update_map_repeated_purchases', methods=['POST'])
 def update_map_repeated_purchases():
@@ -113,44 +107,6 @@ def update_map_repeated_purchases():
     print(response_data)
     return jsonify(response_data)
 
-
-@app.route('/update_map_net_sc', methods=['POST'])
-def update_map_net_sc():
-    data = request.json
-    print("Received data:", data)  # This line prints the received data to the console
-    customer = data.get('customer')
-    timeframe = data.get('timeframe')
-    year = data.get('year')  # New field for Year
-    quarter = data.get('quarter')  # New field for Quarter
-    month = data.get('month')  # New field for Month
-    selected_supplier_id = data.get('supplier_id')
-
-    # Fetch GeoJSON
-    url = 'https://api.maptiler.com/data/d3cd5f06-97f4-4333-9444-b62dd7f16f6c/features.json?key=uIMFZoCyLmKWTvmPj2JG'
-    response = requests.get(url)
-    geojson_data = response.json()
-
-    suppliers_data = []
-    customers_data = []
-
-    for feature in geojson_data['features']:
-        supplier = feature['properties']['Supplier']
-        customer_id = feature['properties']['Customer ID']
-
-        if supplier != "NA" and (selected_supplier_id == "All" or supplier == selected_supplier_id):
-            suppliers_data.append(feature)
-        elif customer_id != "NA":
-            feature['properties']['Customer ID']=customer
-            customers_data.append(feature)
-            #print(customers_data)
-    # Prepare and return the response data
-    response_data = {
-        'status': 'success',
-        'suppliers': suppliers_data,
-        'customers': customers_data
-    }
-    #print(response_data)
-    return jsonify(response_data)
 
 @app.route('/get_network_data', methods=['POST'])
 def get_network_data():
