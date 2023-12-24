@@ -319,9 +319,11 @@
                             map.addLayer(vectorLayer);
 
                             
+                        } else if (response.status == 'id_failure') {
+                            alert("Invalid product ID!");
                         } else {
                             console.error('Failed to update map. Server responded with status:', response.status);
-                        }
+                        } 
                     }
 
                 });

@@ -69,8 +69,13 @@ def update_map_repeated_purchases():
     geojson_data = None
     match timeframe:
         case 'Monthly':
-            geojson_data = query_monthly(int(year),quarter[1],[months.index(month)+1,product_id])
+            mno = months.index(month)+1
+            if not query_product_exists_mnt(int(year),quarter[1],[mno,product_id]):
+                return jsonify({'status': 'id_failure'})
+            geojson_data = query_monthly(int(year),quarter[1],[mno,product_id])
         case 'Quarterly':
+            if not query_product_exists_qtr(int(year),quarter[1],[product_id]):
+                return jsonify({'status': 'id_failure'})
             geojson_data = query_quarterly(int(year),quarter[1],[product_id])
         
 

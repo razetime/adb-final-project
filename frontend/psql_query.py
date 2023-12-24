@@ -77,8 +77,17 @@ def query_quarterly(cur,year,quarter,query_arr):
                     ) as tbl;""",query_arr)
     
 @db_retrieve
-def query_product_exists(cur,year,quarter,query_arr):
-    cur.execute("""SELECT product_number FROM order_2012Q1 where product_number = 4136301""")
+def query_product_exists_qtr(cur,year,quarter,query_arr):
+    cur.execute(f"""SELECT product_number FROM order_{year}Q{quarter} 
+                   WHERE product_number = %s;""",query_arr)
+
+@db_retrieve
+def query_product_exists_mnt(cur,year,quarter,query_arr):
+    cur.execute(f"""SELECT product_number FROM order_{year}Q{quarter} 
+                   WHERE 
+                     EXTRACT(MONTH FROM order_establishment_time) = %s
+                     AND product_number = %s;""",query_arr)
+    
 # @db_retrieve
 # def query_monthly(cur,year,quarter,query_arr):
 #     # query_arr = [ product number]
