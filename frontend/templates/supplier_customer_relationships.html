@@ -406,18 +406,33 @@
                     return function(alpha) {
                         nodes.forEach(function(node) {
                             if (node.group in groupYPositions) {
-                                node.y += (groupYPositions[node.group] - node.y) * alpha * 0.1;
+                                // Calculate target Y position based on group
+                                const targetY = groupYPositions[node.group];
+                                // Apply a force towards the target Y position
+                                node.y += (targetY - node.y) * alpha * 0.1;
                             }
                         });
                     };
                 }
 
                 const simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(links).id(d => d.id).distance(350))
+                    .force("link", d3.forceLink(links).id(d => d.id)
+                        .distance(350) // You can adjust this distance as needed
+                        .strength(function(link) {
+                            // Calculate the strength of the link to maintain hierarchical 'y' positions
+                            return Math.min(1, 0.7 / Math.min(count(link.source), count(link.target)));
+                        }))
                     .force("charge", d3.forceManyBody().strength(-280))
                     .force("center", d3.forceCenter(width / 2, height / 2))
                     .force("groupY", forceGroupY(groupYPositions))
-                    .force("collision", d3.forceCollide().radius(120)); // Collision radius to prevent overlap
+                    .force("collision", d3.forceCollide().radius(d => calculateRadius(d)));
+                
+                // Function to count the number of links connected to a node
+                function count(node) {
+                    return links.reduce(function(count, link) {
+                        return count + (link.source === node || link.target === node ? 1 : 0);
+                    }, 0);
+                }
 
                 const link = svg.append("g")
                     .selectAll("line")
@@ -510,6 +525,8 @@
                     .attr("dominant-baseline", "central")
                     .attr("fill", "white");
                 
+                    
+
                     // Function to calculate node radius based on label text
                 function calculateRadius(d) {
                     let label;
