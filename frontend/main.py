@@ -241,21 +241,26 @@ def get_time_series_data():
     data = request.json
     print("Received data:", data)
     supplier_id = data.get('supplier_id')
-    product_id = data.get('product-id')
+    product_id = data.get('product_id')
     timeframe = data.get('timeframe')
     year = data.get('year')  # New field for Year
     quarter = data.get('quarter')  # New field for Quarter
     month = data.get('month')  # New field for Month
 
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     # Generate time series data based on the timeframe
     if timeframe == 'Daily':
         labels = [f'Day {i+1}' for i in range(31)]
     elif timeframe == 'Monthly':
         labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     
-    data = [random.randint(100, 500) for _ in labels]  # Random data for illustration
+    query_data = query_product_timeseries_daily(year,quarter,[product_id,1+months.index(month)])
+    # data = [random.randint(100, 500) for _ in labels]  # Random data for illustration
 
-    return jsonify({'labels': labels, 'data': data})
+    return jsonify({
+        'labels': [x[0] for x in query_data],
+        'data': [x[1] for x in query_data]
+        })
 
 
 if __name__ == '__main__':
