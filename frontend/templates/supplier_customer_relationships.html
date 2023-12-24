@@ -32,22 +32,24 @@
                     </div>
                 </div>
                 <h2 class="title">Supplier - Customer Relationships</h2>
-                <div class="inputs">
-                    <div class="input-group">
-                        <label for="supplier-id">Supplier ID</label>
-                        <input type="text" id="supplier-id" placeholder="Enter Supplier ID">
-                    </div>
-                    <div class="input-group">
-                        <label for="customer-id">Customer ID</label>
-                        <input type="text" id="customer-id" placeholder="Enter Customer ID">
-                    </div>
-                    <div class="input-group">
-                        <label for="date-range">Date Range for Transactions</label>
-                        <input type="date" id="start-date">
-                        <input type="date" id="end-date">
+                <div class="inputs-container">
+                    <div class="inputs">
+                        <div class="input-group">
+                            <label for="supplier-id">Supplier ID</label>
+                            <input type="text" id="supplier-id" placeholder="Enter Supplier ID">
+                        </div>
+                        <div class="input-group">
+                            <label for="customer-id">Customer ID</label>
+                            <input type="text" id="customer-id" placeholder="Enter Customer ID">
+                        </div>
                     </div>
                 </div>
                 <button id="submit">Submit</button>
+
+                <div id="node-info">
+                    Click on a node to see its information here.
+                </div>
+
             </div>
         </div>
         <div class="right-section">
@@ -85,8 +87,6 @@
 
                 var selectedSupplierId = $('#supplier-id').val();
                 var selectedCustomer = $('#customer-id').val();
-                var selectedStartDate = $('#start-date').val();
-                var selectedEndDate = $('#end-date').val();
 
                 $.ajax({
                     url: "{{ url_for('update_map_net_sc') }}",
@@ -95,8 +95,6 @@
                     data: JSON.stringify({ 
                         supplier_id: selectedSupplierId, 
                         customer: selectedCustomer,
-                        start_date: selectedStartDate, 
-                        end_date: selectedEndDate  
                     }),
                     dataType: "json",
                     success: function(response) {
@@ -349,11 +347,9 @@
                 event.preventDefault();  // Prevents the default form submission action
                 var selectedSupplierId = $('#supplier-id').val();
                 var selectedCustomer = $('#customer-id').val();
-                var selectedStartDate = $('#start-date').val();
-                var selectedEndDate = $('#end-date').val();
 
                 // Form validation
-                if (!selectedSupplierId || !selectedCustomer || !selectedStartDate || !selectedEndDate) {
+                if (!selectedSupplierId || !selectedCustomer) {
                     return;  // Stops the function if validation fails
                 }
 
@@ -365,106 +361,230 @@
                     data: JSON.stringify({ 
                     supplier_id: selectedSupplierId, 
                     customer: selectedCustomer,
-                    start_date: selectedStartDate, 
-                    end_date: selectedEndDate 
                     }),
                     dataType: "json",
                     success: function(response) {
                         // Render the network graph with the received data
                         renderNetworkGraph(response.nodes, response.links);
+                    },
+                    error: function(error) {
+                        console.log("Error fetching graph data: ", error);
                     }
                 });
             });
 
-            function renderNetworkGraph(nodes, links) {
-                // Clear previous graph
-                d3.select("#network-graph svg").remove();
+            let groupRectangles = {}; // Store rectangles for each group
+            let groupLabels = {}; // Store labels for each group
 
+            function renderNetworkGraph(nodes, links) {
                 const width = document.getElementById("network-graph").clientWidth;
-                const height = 400;
-                const linkDistance = 200;
-                const sourceColor = "#cd3700"; // Example color for source nodes
-                const targetColor = "#ff6103"; // Example color for target nodes
-                // Function to calculate node radius
-                function getNodeRadius(id) {
-                    return Math.max(20, id.length * 4); // Adjust as needed
-                }
+                const height = document.getElementById("network-graph").clientHeight;
 
                 const svg = d3.select("#network-graph").append("svg")
                     .attr("width", width)
                     .attr("height", height)
+                    .style("background-color", "lightblue") // Set the background color here
                     .call(d3.zoom().on("zoom", function (event) {
                         svg.attr("transform", event.transform);
                     }))
                     .append("g");
 
-                // Define color scale
-                const colorScale = d3.scaleSequential((t) => d3.interpolateBlues(0.5 + t * 0.5))
-                    .domain([0, 100]); // Assuming 'value' is between 0 and 100
+                const color = d3.scaleOrdinal(d3.schemeCategory10);
+                
 
-                // Define scale for the link stroke width
-                const strokeWidthScale = d3.scaleLinear()
-                    .domain([0, d3.max(links, d => d.value)])
-                    .range([1, 5]); // Adjust the range as needed
+                // Define the vertical positions for each group
+                const groupYPositions = {
+                    "User": height,
+                    "ParentOrder": height * 2,
+                    "Order": height * 3,
+                    "Product": height * 4,
+                    "Supplier": height * 5
+                };
+
+                // Custom force to align nodes vertically based on their group
+                function forceGroupY(groupYPositions) {
+                    return function(alpha) {
+                        nodes.forEach(function(node) {
+                            if (node.group in groupYPositions) {
+                                node.y += (groupYPositions[node.group] - node.y) * alpha * 0.1;
+                            }
+                        });
+                    };
+                }
 
                 const simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(links).id(d => d.id).distance(linkDistance))
-                    .force("charge", d3.forceManyBody())
-                    .force("center", d3.forceCenter(width / 2, height / 2));
+                    .force("link", d3.forceLink(links).id(d => d.id).distance(350))
+                    .force("charge", d3.forceManyBody().strength(-280))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("groupY", forceGroupY(groupYPositions))
+                    .force("collision", d3.forceCollide().radius(120)); // Collision radius to prevent overlap
 
-                const linkGroup = svg.append("g")
-                    .attr("class", "links")
-                    .selectAll("g")
+                const link = svg.append("g")
+                    .selectAll("line")
                     .data(links)
-                    .join("g");
+                    .join("line")
+                    .attr("stroke", "#999")
+                    .attr("stroke-opacity", 0.6)
+                    .attr("stroke-width", 6); // Increase the stroke width for thicker lines
 
-                const link = linkGroup.append("line")
-                    .attr("stroke-width", d => strokeWidthScale(d.value))
-                    .attr("stroke", d => colorScale(d.value));
+                // Modify labels based on group
+                const groupLabelsMapping = {
+                    "User": "Customer",
+                    "ParentOrder": "Parent Orders",
+                    "Order": "Orders",
+                    "Product": "Products",
+                    "Supplier": "Suppliers"
+                };
 
-                const linkText = linkGroup.append("text")
-                    .text(d => d.value.toFixed(0)) // Round the value to an integer
-                    .attr("fill", "black") // Text color
-                    .attr("font-size", 18) // Adjust font size as needed
-                    .attr("text-anchor", "middle"); // Center the text on the link
+                const linkLabel = svg.append("g")
+                    .selectAll("text")
+                    .data(links)
+                    .join("text")
+                    .text(d => d.type)
+                    .attr("x", d => (d.source.x + d.target.x) / 2)
+                    .attr("y", d => (d.source.y + d.target.y) / 2);
+
+                // Function to display node information
+                function displayNodeInfo(node) {
+                    const nodeInfoDiv = document.getElementById("node-info");
+
+                    // Debugging: Log the node object to console
+                    console.log("Selected node:", node);
+
+                    let infoHtml = ``;
+
+                    switch (node.group) {
+                        case "User":
+                            infoHtml += `Customer<br>ID: ${node.customer_id || "N/A"}`;
+                            break;
+                        case "ParentOrder":
+                            infoHtml += `Parent Order<br>ID: ${node.parent_ord_id || "N/A"}<br>Datetime: ${node.datetime || "N/A"}<br>Parent Order Number: ${node.parent_ord_num || "N/A"}`;
+                            break;
+                        case "Order":
+                            infoHtml += `Order<br>ID: ${node.order_id || "N/A"}<br>Ship Method: ${node.ship_method || "N/A"}`;
+                            break;
+                        case "Product":
+                            infoHtml += `Product<br>ID: ${node.prod_id || "N/A"}<br>Name: ${node.name || "N/A"}`;
+                            break;
+                        case "Supplier":
+                            infoHtml += `Supplier<br>ID: ${node.supplier_id || "N/A"}<br>Name: ${node.name || "N/A"}`;
+                            break;
+                        default:
+                            // Handle unknown group
+                            infoHtml += `<br>No additional info available`;
+                    }
+
+                    nodeInfoDiv.innerHTML = infoHtml;
+                }
+
+
 
                 const node = svg.append("g")
                     .selectAll("circle")
                     .data(nodes)
                     .join("circle")
-                    .attr("r", d => getNodeRadius(d.id))
-                    .attr("fill", d => {
-                        // Check if the node is a source node
-                        const isSource = links.some(link => link.source.id === d.id);
-                        return isSource ? sourceColor : targetColor;
+                    .attr("r", d => calculateRadius(d))
+                    .attr("fill", d => color(d.group))
+                    .on("click", function(event, d) {
+                        displayNodeInfo(d); // Pass the node data 'd' to the displayNodeInfo function
                     });
 
+                
+                
                 const label = svg.append("g")
                     .selectAll("text")
                     .data(nodes)
                     .join("text")
-                    .text(d => d.id)
-                    .attr("text-anchor", "middle") // Center text horizontally
-                    .attr("dominant-baseline", "central") // Center text vertically
-                    .attr("font-size", 15)
-                    .attr("fill", "white"); // Text color
+                    .text(d => {
+                        // Choose label text based on node group
+                        switch(d.group) {
+                            case "User": return d.customer_id || "N/A";
+                            case "ParentOrder": return d.parent_ord_num || "N/A";
+                            case "Order": return d.order_id || "N/A";
+                            case "Product": return d.name || "N/A";
+                            case "Supplier": return d.name || "N/A";
+                            default: return "N/A"; // Fallback for unknown groups
+                        }
+                    })
+                    .attr("text-anchor", "middle")
+                    .attr("dominant-baseline", "central")
+                    .attr("fill", "white");
+                
+                    // Function to calculate node radius based on label text
+                function calculateRadius(d) {
+                    let label;
+                    switch(d.group) {
+                        case "User": label = d.customer_id || "N/A"; break;
+                        case "ParentOrder": label = d.parent_ord_num || "N/A"; break;
+                        case "Order": label = d.order_id || "N/A"; break;
+                        case "Product": label = d.name || "N/A"; break;
+                        case "Supplier": label = d.name || "N/A"; break;
+                        default: label = "N/A"; // Fallback for unknown groups
+                    }
+                    const averageCharWidth = 15; // Average pixel width of a character; adjust as needed
+                    const textLength = label.length * averageCharWidth;
+                    return Math.max(20, textLength / 2); // Ensure a minimum radius
+                }
 
+                // Initialize group rectangles and labels
+                const nodeGroups = d3.group(nodes, d => d.group);
+                nodeGroups.forEach((groupNodes, groupName) => {
+                    groupRectangles[groupName] = svg.append("rect")
+                        .style("fill", "none")
+                        .style("stroke", color(groupName))
+                        .style("stroke-width", 2)
+                        .style("stroke-dasharray", "3, 3");
+
+                    groupLabels[groupName] = svg.append("text")
+                        .attr("text-anchor", "middle")
+                        .text(groupLabelsMapping[groupName] || groupName)
+                        .style("font-size", "14px")
+                        .style("fill", color(groupName));
+                });
+                    
+                
                 simulation.on("tick", () => {
                     link.attr("x1", d => d.source.x)
                         .attr("y1", d => d.source.y)
                         .attr("x2", d => d.target.x)
                         .attr("y2", d => d.target.y);
 
-                    linkText
+                    linkLabel
                         .attr("x", d => (d.source.x + d.target.x) / 2)
                         .attr("y", d => (d.source.y + d.target.y) / 2);
 
                     node.attr("cx", d => d.x)
                         .attr("cy", d => d.y);
 
-                    label.attr("transform", d => `translate(${d.x}, ${d.y})`);
+                    label.attr("x", d => d.x)
+                        .attr("y", d => d.y);
+
+                    // Update group rectangles and labels
+                    nodeGroups.forEach((groupNodes, groupName) => {
+                        let minX = d3.min(groupNodes, d => d.x - calculateRadius(d)) || 0;
+                        let maxX = d3.max(groupNodes, d => d.x + calculateRadius(d)) || 0;
+                        let minY = d3.min(groupNodes, d => d.y - calculateRadius(d)) || 0;
+                        let maxY = d3.max(groupNodes, d => d.y + calculateRadius(d)) || 0;
+
+                        let width = maxX - minX + 20;
+                        let height = maxY - minY + 20;
+                        let x = minX - 10;
+                        let y = minY - 10;
+
+                        groupRectangles[groupName]
+                            .attr("x", x)
+                            .attr("y", y)
+                            .attr("width", width)
+                            .attr("height", height);
+
+                        groupLabels[groupName]
+                            .attr("x", x + width / 2)
+                            .attr("y", y - 10);
+                    });
                 });
             }
+
+
         });
     </script>
 
@@ -475,11 +595,9 @@
 
             var selectedSupplierId = $('#supplier-id').val();
             var selectedCustomer = $('#customer-id').val();
-            var selectedStartDate = $('#start-date').val();
-            var selectedEndDate = $('#end-date').val();
 
             // Form validation
-            if (!selectedSupplierId || !selectedCustomer || !selectedStartDate || !selectedEndDate) {
+            if (!selectedSupplierId || !selectedCustomer) {
                 alert('Please fill all fields before submitting.');
                 return;  // Stops the function if validation fails
             }
@@ -492,8 +610,6 @@
                 data: JSON.stringify({ 
                     supplier_id: selectedSupplierId, 
                     customer: selectedCustomer,
-                    start_date: selectedStartDate, 
-                    end_date: selectedEndDate 
                 }),
                 dataType: "json",
                 success: function(response) {

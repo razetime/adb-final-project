@@ -34,26 +34,42 @@
                 </div>
             </div>
             <h2 class="title">Time Series Analysis of Product Sales</h2>
-            <div class="inputs">
-                <!-- <div class="input-group">
-                    <label for="supplier-id">Supplier ID</label>
-                    <input type="text" id="supplier-id" placeholder="Enter Supplier ID">
-                </div> -->
-                
-                <div class="input-group">
-                    <label for="product-id">Product ID</label>
-                    <input type="text" id="product-id" placeholder="Enter Product ID">
+            <div class="inputs-container"></div>
+                <div class="inputs">
+                    <!-- <div class="input-group">
+                        <label for="supplier-id">Supplier ID</label>
+                        <input type="text" id="supplier-id" placeholder="Enter Supplier ID">
+                    </div> -->
+                    
+                    <div class="input-group">
+                        <label for="product-id">Product ID</label>
+                        <input type="text" id="product-id" placeholder="Enter Product ID">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="timeframe">Time Frame</label>
+                        <select id="timeframe">
+                            {% for timeframe in timeframes %}
+                                <option value="{{ timeframe }}">{{ timeframe }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- New dropdowns for Year, Quarter, and Month -->
+                    <div class="inputs" id="additional-timeframe-selectors">
+                        <div class="input-group" id="year-group">
+                            <label for="year">Year</label>
+                            <select id="year"></select>
+                        </div>
+                        <div class="input-group" id="quarter-group">
+                            <label for="quarter">Quarter</label>
+                            <select id="quarter"></select>
+                        </div>
+                        <div class="input-group" id="month-group">
+                            <label for="month">Month</label>
+                            <select id="month"></select>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="input-group">
-                    <label for="timeframe">Time Frame</label>
-                    <select id="timeframe">
-                        {% for timeframe in timeframes %}
-                            <option value="{{ timeframe }}">{{ timeframe }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
             <button id="submit">Submit</button>
         </div>
         <div class="chart-section">
@@ -100,18 +116,79 @@
         var myChart; // Declare myChart globally
     
         $(document).ready(function() {
+            // Populate year, quarter, and month dropdowns
+            function populateDropdowns() {
+                $('#year').empty();
+                $('#quarter').empty();
+                $('#month').empty();
+
+                // Populate years
+                var years = ['2011', '2012'];
+                $.each(years, function(index, year) {
+                    $('#year').append($('<option>', { value: year, text: year }));
+                });
+
+                // Initially populate quarters and months
+                updateQuarters();
+                updateMonths();
+            }
+
+            // Function to update Quarters based on selected Year
+            function updateQuarters() {
+                var selectedYear = $('#year').val();
+                $('#quarter').empty();
+                if (selectedYear === '2011') {
+                    $.each(['Q1', 'Q2', 'Q3', 'Q4'], function(index, quarter) {
+                        $('#quarter').append($('<option>', { value: quarter, text: quarter }));
+                    });
+                } else if (selectedYear === '2012') {
+                    $.each(['Q1', 'Q2'], function(index, quarter) {
+                        $('#quarter').append($('<option>', { value: quarter, text: quarter }));
+                    });
+                }
+            }
+
+            // Function to update Months based on selected Quarter
+            function updateMonths() {
+                var selectedQuarter = $('#quarter').val();
+                $('#month').empty();
+                var months = {
+                    'Q1': ['January', 'February', 'March'],
+                    'Q2': ['April', 'May', 'June'],
+                    'Q3': ['July', 'August', 'September'],
+                    'Q4': ['October', 'November', 'December']
+                };
+                $.each(months[selectedQuarter] || [], function(index, month) {
+                    $('#month').append($('<option>', { value: month, text: month }));
+                });
+            }
+
+            // Event handlers for change events
+            $('#year').change(function() {
+                updateQuarters();
+                updateMonths(); // Update months as well since quarters are changing
+            });
+
+            $('#quarter').change(updateMonths);
+
+            // Initial population of dropdowns
+            populateDropdowns();
+
             $('#submit').click(function() {
                 // Get input values
                 var supplier_id = $('#supplier-id').val();
                 var product_id = $('#product-id').val();
                 var timeframe = $('#timeframe').val();
-    
+                var selectedYear = $('#year').val();
+                var selectedQuarter = $('#quarter').val();
+                var selectedMonth = $('#month').val();
+
                 // Send data to Flask
                 $.ajax({
                     url: "{{ url_for('get_time_series_data') }}",
                     type: "POST",
                     contentType: "application/json",
-                    data: JSON.stringify({ supplier_id: supplier_id, product_id: product_id, timeframe: timeframe }),
+                    data: JSON.stringify({ supplier_id: supplier_id, product_id: product_id, timeframe: timeframe, year: selectedYear, quarter: selectedQuarter, month: selectedMonth }),
                     dataType: "json",
                     success: function(response) {
                         // If chart already exists, destroy it
@@ -187,6 +264,75 @@
                 $(handles[0]).find('.slider-label').text(labels[0]);
                 $(handles[1]).find('.slider-label').text(labels[labels.length - 1]);
             }
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            // Convert the Flask variables to JSON and then parse them in JavaScript
+            var years = JSON.parse('{{ years | tojson | safe }}');
+            var quarters = JSON.parse('{{ quarters | tojson | safe }}');
+            var months = JSON.parse('{{ months | tojson | safe }}');
+
+            $.each(years, function(index, year) {
+                $('#year').append($('<option>', { value: year, text: year }));
+            });
+
+            $.each(quarters, function(index, quarter) {
+                $('#quarter').append($('<option>', { value: quarter, text: quarter }));
+            });
+
+            $.each(months, function(index, month) {
+                $('#month').append($('<option>', { value: month, text: month }));
+            });
+
+            // Show/hide year, quarter, and month dropdowns based on selected timeframe
+            $('#timeframe').change(function() {
+                var selectedTimeframe = $(this).val();
+                switch(selectedTimeframe) {
+                    case 'Daily':
+                        $('#additional-timeframe-selectors').show();
+                        $('#year-group').show();
+                        $('#quarter-group').show();
+                        $('#month-group').show();
+                        break;
+                    case 'Monthly':
+                        $('#additional-timeframe-selectors').show();
+                        $('#year-group').show();
+                        $('#quarter-group').hide();
+                        $('#month-group').hide();
+                        break;
+                    default:
+                        $('#additional-timeframe-selectors').hide();
+                }
+            });
+
+            // Function to adjust visibility based on the timeframe
+            function adjustTimeframeSelectors() {
+                var selectedTimeframe = $('#timeframe').val();
+                switch(selectedTimeframe) {
+                    case 'Daily':
+                        $('#additional-timeframe-selectors').show();
+                        $('#year-group').show();
+                        $('#quarter-group').show();
+                        $('#month-group').show();
+                        break;
+                    case 'Monthly':
+                        $('#additional-timeframe-selectors').show();
+                        $('#year-group').show();
+                        $('#quarter-group').hide();
+                        $('#month-group').hide();
+                        break;
+                    default:
+                        $('#additional-timeframe-selectors').hide();
+                }
+            }
+
+            // Initialize visibility based on the initial value
+            adjustTimeframeSelectors();
+
+            // Change event to adjust visibility when the timeframe changes
+            $('#timeframe').change(adjustTimeframeSelectors);
         });
     </script>
 </body>

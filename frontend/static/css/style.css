@@ -152,7 +152,7 @@ nav a:hover {
     justify-content: center;
     flex-wrap: wrap;
     width: 100%;
-    margin-top: 150px; /* Adjust as needed for spacing */
+    margin-top: 100px; /* Adjust as needed for spacing */
 }
 
 
@@ -186,7 +186,19 @@ nav a:hover {
     border: none;
     transition: background-color 0.3s ease;
     cursor: pointer;
-    margin-top: 150px; /* Significant space above the button */
+    margin-top: 50px; /* Significant space above the button */
+}
+
+#node-info {
+    background-color: white;
+    display: flex;
+    color: black;
+    flex-direction: row;
+    justify-content: center; 
+    padding: 10px;
+    font-size: 1.1em;
+    border: none;
+    margin-top: 50px;
 }
 
 #submit:hover {
