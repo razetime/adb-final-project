@@ -87,7 +87,27 @@ def query_product_exists_mnt(cur,year,quarter,query_arr):
                    WHERE 
                      EXTRACT(MONTH FROM order_establishment_time) = %s
                      AND product_number = %s;""",query_arr)
-    
+
+@db_retrieve
+def query_product_timeseries_daily(cur,year,quarter,query_arr):
+    print(query_arr)
+    print(cur.mogrify(f"""SELECT EXTRACT(DAY FROM order_establishment_time) as mo,count(product_number)
+                    FROM order_{year}{quarter} 
+                    WHERE product_number = %s
+                        AND EXTRACT(MONTH from order_establishment_time) = %s
+                    GROUP BY mo;""",query_arr))
+    cur.execute(f"""SELECT EXTRACT(DAY FROM order_establishment_time) as mo,count(product_number)
+                    FROM order_{year}{quarter} 
+                    WHERE product_number = %s
+                        AND EXTRACT(MONTH from order_establishment_time) = %s
+                    GROUP BY mo;""",query_arr)
+
+@db_retrieve
+def query_product_timeseries_monthly(cur,year,quarter,query_arr):
+    cur.execute(f"""SELECT count(product_number) FROM order_{year}Q{quarter}
+                    WHERE product_number = %s
+                    GROUP BY order_establishment_time;""",query_arr)
+
 # @db_retrieve
 # def query_monthly(cur,year,quarter,query_arr):
 #     # query_arr = [ product number]
