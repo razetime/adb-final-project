@@ -115,10 +115,10 @@ def get_network_data():
     data = request.json
     customer = data.get('customer')
     supplier_id = data.get('supplier_id')
-    timeframe = data.get('timeframe')
-    year = data.get('year')  # New field for Year
-    quarter = data.get('quarter')  # New field for Quarter
-    month = data.get('month')  # New field for Month
+    # timeframe = data.get('timeframe')
+    # year = data.get('year')  # New field for Year
+    # quarter = data.get('quarter')  # New field for Quarter
+    # month = data.get('month')  # New field for Month
     # Sample data resembling the output of a Neo4J query
     # resdict = {
     #     "nodes": 
@@ -145,7 +145,8 @@ def get_network_data():
     #     ]
     # }
     connection = neo4jConnection()
-    resdict = connection.fetch_data(QUERY_TYPES["SUPPLIER_USER_RELATIONSHIPS"], ["505", "eBRIejoRT3q3.bSthUA9"])
+    # "505", "eBRIejoRT3q3.bSthUA9"
+    resdict = connection.fetch_data(QUERY_TYPES["SUPPLIER_USER_RELATIONSHIPS"], [supplier_id, customer])
     print(type(resdict))
 
     # # Generate nodes and links based on the supplier
