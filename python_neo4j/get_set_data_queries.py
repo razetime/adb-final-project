@@ -10,12 +10,12 @@ ALL_NODE_TYPES = ("Order", "Product", "CancelledOrder", "Supplier", "ParentOrder
 ORDER_FILES = ["order_2012Q1","order_2012Q2",
                "order_2011Q1","order_2011Q2","order_2011Q3","order_2011Q4"
                ]
-CANCELLED_ORDERS_FILES=["4_Φ¿éσû«σÅûµ╢ê\\cancel_order"]
-WEARHOUSE_FILES=["3_σ»äσÇëσàÑσ║½µ¬ö\\stlend"]
+CANCELLED_ORDERS_FILES=["cancel_order"]
+WEARHOUSE_FILES=["stlend"]
 PRODUCT_FILES = [
     # "2_σòåσôüµ¬ö\\product(σÇëσç║)", 
-    "2_σòåσôüµ¬ö\\2012_product_list"]
-SUPPLIERS_FILES = ["1_Σ╛¢µçëσòå\\supplier"]
+    "2012_product_list"]
+SUPPLIERS_FILES = ["supplier"]
 PARENT_FOLDER = os.getenv('PARENT_FOLDER')
 
 def get_one_order():

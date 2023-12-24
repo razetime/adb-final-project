@@ -17,7 +17,7 @@ DATABASE = os.getenv('DATABASE')
 class neo4jConnection:
     def __init__(self):
         self.driver = GraphDatabase.driver(uri=URI, auth=basic_auth(USERNAME, PASSWORD))
-        self.check_and_init_data()
+        # self.check_and_init_data()
 
     def close(self):
         self.driver.close()
