@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 from psql_query import *
 import random
+from python_neo4j.init_py import neo4jConnection
+from python_neo4j.get_queries_strings import QUERY_TYPES
 import requests
 
 app = Flask(__name__)
@@ -118,30 +120,33 @@ def get_network_data():
     quarter = data.get('quarter')  # New field for Quarter
     month = data.get('month')  # New field for Month
     # Sample data resembling the output of a Neo4J query
-    resdict = {
-        "nodes": 
-        [
-            {"id": "eBRIejoRT3q3.bSthUA9", "type": ["User"] ,"element_id": "8217280"}, 
-            {"datetime": "2012-06-15 22:34:00.000", "id": "39218011", "parent_ord_num": "RM1206150031411", "type": ["ParentOrder"], "element_id": "8217279"}, 
-            {"ship_method": "倉出", "id": "RS1206150047841", "type": ["Order"], "element_id": "8217278"}, 
-            {"name": "Delonghi 迪朗奇多功能磨豆機 KG40", "id": "7320052", "type": ["Product"], "element_id": "9761"}, 
-            {"name": "新各界企業有限公司", "id": "505", "type": ["Supplier"], "element_id": "13"}, 
-            {"datetime": "2012-06-15 22:34:00.000", "id": "39218011", "parent_ord_num": "RM1206150031412", "type": ["ParentOrder"], "element_id": "8217282"}, 
-            {"ship_method": "倉出", "id": "RS1206150047842", "type": ["Order"], "element_id": "8217281"}, 
-            {"name": "迪朗奇義式濃縮半自動咖啡機 EC155", "id": "7320016", "type": ["Product"], "element_id": "9760"}
-        ], 
-        "relationships": 
-        [
-            {"type": "ORDERED", "nodes": ["8217280", "8217279"], "element_id": "9760"}, 
-            {"type": "INCLUDE", "nodes": ["8217279", "8217278"], "element_id": "9760"}, 
-            {"type": "CONTAIN", "nodes": ["8217278", "9761"], "element_id": "9760"}, 
-            {"type": "PRODUCES", "nodes": ["9761", "13"], "element_id": "9760"}, 
-            {"type": "ORDERED", "nodes": ["8217280", "8217282"], "element_id": "9760"}, 
-            {"type": "INCLUDE", "nodes": ["8217282", "8217281"], "element_id": "9760"}, 
-            {"type": "CONTAIN", "nodes": ["8217281", "9760"], "element_id": "9760"}, 
-            {"type": "PRODUCES", "nodes": ["9760", "13"], "element_id": "9760"}
-        ]
-    }
+    # resdict = {
+    #     "nodes": 
+    #     [
+    #         {"id": "eBRIejoRT3q3.bSthUA9", "type": ["User"] ,"element_id": "8217280"}, 
+    #         {"datetime": "2012-06-15 22:34:00.000", "id": "39218011", "parent_ord_num": "RM1206150031411", "type": ["ParentOrder"], "element_id": "8217279"}, 
+    #         {"ship_method": "倉出", "id": "RS1206150047841", "type": ["Order"], "element_id": "8217278"}, 
+    #         {"name": "Delonghi 迪朗奇多功能磨豆機 KG40", "id": "7320052", "type": ["Product"], "element_id": "9761"}, 
+    #         {"name": "新各界企業有限公司", "id": "505", "type": ["Supplier"], "element_id": "13"}, 
+    #         {"datetime": "2012-06-15 22:34:00.000", "id": "39218011", "parent_ord_num": "RM1206150031412", "type": ["ParentOrder"], "element_id": "8217282"}, 
+    #         {"ship_method": "倉出", "id": "RS1206150047842", "type": ["Order"], "element_id": "8217281"}, 
+    #         {"name": "迪朗奇義式濃縮半自動咖啡機 EC155", "id": "7320016", "type": ["Product"], "element_id": "9760"}
+    #     ], 
+    #     "relationships": 
+    #     [
+    #         {"type": "ORDERED", "nodes": ["8217280", "8217279"], "element_id": "9760"}, 
+    #         {"type": "INCLUDE", "nodes": ["8217279", "8217278"], "element_id": "9760"}, 
+    #         {"type": "CONTAIN", "nodes": ["8217278", "9761"], "element_id": "9760"}, 
+    #         {"type": "PRODUCES", "nodes": ["9761", "13"], "element_id": "9760"}, 
+    #         {"type": "ORDERED", "nodes": ["8217280", "8217282"], "element_id": "9760"}, 
+    #         {"type": "INCLUDE", "nodes": ["8217282", "8217281"], "element_id": "9760"}, 
+    #         {"type": "CONTAIN", "nodes": ["8217281", "9760"], "element_id": "9760"}, 
+    #         {"type": "PRODUCES", "nodes": ["9760", "13"], "element_id": "9760"}
+    #     ]
+    # }
+    connection = neo4jConnection()
+    resdict = connection.fetch_data(QUERY_TYPES["SUPPLIER_USER_RELATIONSHIPS"], ["505", "eBRIejoRT3q3.bSthUA9"])
+    print(type(resdict))
 
     # # Generate nodes and links based on the supplier
     # # For now, this is just a simple example
@@ -188,7 +193,7 @@ def process_data_for_graph(resdict):
     for node in resdict["nodes"]:
         node_info = {
             "id": node["element_id"],  # Use element_id as the unique identifier
-            "group": node["type"][0],
+            "group": list(node["type"])[0],
         }
         # Additional properties based on type
         if node_info["group"] == "User":
