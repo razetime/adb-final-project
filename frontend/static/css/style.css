@@ -189,6 +189,18 @@ nav a:hover {
     margin-top: 50px; /* Significant space above the button */
 }
 
+#node-info-label {
+    font-weight: bold;
+    display: flex;
+    color: white;
+    flex-direction: row;
+    justify-content: center; 
+    padding: 10px;
+    font-size: 1.2em;
+    border: none;
+    margin-top: 100px;
+}
+
 #node-info {
     background-color: white;
     display: flex;
@@ -198,7 +210,7 @@ nav a:hover {
     padding: 10px;
     font-size: 1.1em;
     border: none;
-    margin-top: 100px;
+    margin-top: 10px;
 }
 
 #submit:hover {
