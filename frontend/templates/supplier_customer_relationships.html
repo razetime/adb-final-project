@@ -89,6 +89,40 @@
             });
             let groupRectangles = {}; // Store rectangles for each group
             let groupLabels = {}; // Store labels for each group
+
+            // Function to set initial spread of nodes horizontally
+            function spreadNodes(nodes, width) {
+                const spreadFactor = width / nodes.length;
+                nodes.forEach((node, index) => {
+                    node.x = spreadFactor * index; // Set initial x position
+                });
+            }
+
+            // Add drag functionality
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                }
+
+                function dragged(event, d) {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                }
+
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
+                    d.fy = null;
+                }
+
+                return d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended);
+            }
+
             function renderNetworkGraph(nodes, links) {
                 $("#network-graph").empty();
                 const width = document.getElementById("network-graph").clientWidth;
@@ -103,6 +137,9 @@
                     .append("g");
                 const color = d3.scaleOrdinal(d3.schemeCategory10);
                 
+                // Spread nodes horizontally
+                spreadNodes(nodes, width);
+
                 const baseLinkDistance = 40;
                 // Define the vertical positions for each group
                 const groupYPositions = {
@@ -140,6 +177,8 @@
                         });
                     };
                 }
+
+
                 // Modify the simulation
                 const simulation = d3.forceSimulation(nodes)
                     .force("link", d3.forceLink(links).id(d => d.id)
@@ -147,9 +186,10 @@
                     .force("charge", d3.forceManyBody().strength(-300))
                     .force("center", d3.forceCenter(width / 2, height / 2))
                     .force("groupY", forceGroupY(groupYPositions))
-                    .force("groupX", forceGroupX()) // Add the horizontal force
-                    .force("collision", d3.forceCollide().radius(d => calculateRadius(d) + 20));
-                
+                    .force("groupX", d3.forceX(width / 2).strength(0.05)) // Gentle horizontal force
+                    .force("collision", d3.forceCollide().radius(d => calculateRadius(d) + 20))
+
+
                 // Function to count the number of links connected to a node
                 function count(node) {
                     return links.reduce(function(count, link) {
@@ -243,6 +283,8 @@
                     .attr("dominant-baseline", "central")
                     .attr("fill", "white");
                 
+                // Apply the drag behavior to nodes
+                node.call(drag(simulation));
                     
                     // Function to calculate node radius based on label text
                 function calculateRadius(d) {
@@ -255,7 +297,7 @@
                         case "Supplier": label = d.supplier_id || "N/A"; break;
                         default: label = "N/A"; // Fallback for unknown groups
                     }
-                    const averageCharWidth = 11; // Average pixel width of a character; adjust as needed
+                    const averageCharWidth = 12; // Average pixel width of a character; adjust as needed
                     const textLength = label.length * averageCharWidth;
                     return Math.max(20, textLength / 2); // Ensure a minimum radius
                 }
