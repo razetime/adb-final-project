@@ -63,7 +63,9 @@
             </div>
             <button id="submit">Submit</button>
         </div>
-        <div id="map" class="map-section"></div>
+        <div id="map" class="map-section">
+            <h3 id="loading" class="hidden">Loading..</h3>
+        </div>
     </div>
 
     <script type="text/javascript">
@@ -225,6 +227,7 @@
             populateDropdowns();
 
             $('#submit').click(function() {
+                $('#loading').removeClass('hidden');
                 var selectedCity = $('#city').val();
                 // var selectedSupplierId = $('#supplier-id').val();
                 var selectedProductId = $('#product-id').val();
@@ -247,7 +250,8 @@
                     }),
                     dataType: "json",
                     success: function(response) {
-                        console.log(response);
+                        $('#loading').addClass('hidden');
+                        // console.log(response);
                         if (response.status === 'success') {
                             var minPurchases = response.min_purchases;
                             var maxPurchases = response.max_purchases;

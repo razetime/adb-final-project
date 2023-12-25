@@ -392,3 +392,6 @@ nav a:hover {
     content: "✖";
 }
 
+.hidden {
+    display: none;
+}

@@ -74,6 +74,7 @@
         </div>
         <div class="chart-section">
             <div class="chart-container">
+                <h3 id="loading" class="hidden">Loading...</h3>
                 <canvas id="myChart" width="700" height="500"></canvas>
                 <div class="slider-container">
                     <div class="min-max-info" id="min-info"></div>
@@ -175,6 +176,7 @@
             populateDropdowns();
 
             $('#submit').click(function() {
+                $('#loading').removeClass('hidden');
                 // Get input values
                 var supplier_id = $('#supplier-id').val();
                 var product_id = $('#product-id').val();
@@ -191,6 +193,7 @@
                     data: JSON.stringify({ supplier_id: supplier_id, product_id: product_id, timeframe: timeframe, year: selectedYear, quarter: selectedQuarter, month: selectedMonth }),
                     dataType: "json",
                     success: function(response) {
+                        $('#loading').addClass('hidden');
                         // If chart already exists, destroy it
                         if (myChart) {
                             myChart.destroy();
