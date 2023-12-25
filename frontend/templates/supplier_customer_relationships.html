@@ -88,6 +88,7 @@
             let groupRectangles = {}; // Store rectangles for each group
             let groupLabels = {}; // Store labels for each group
             function renderNetworkGraph(nodes, links) {
+                $("#network-graph").empty();
                 const width = document.getElementById("network-graph").clientWidth;
                 const height = document.getElementById("network-graph").clientHeight;
                 const svg = d3.select("#network-graph").append("svg")
