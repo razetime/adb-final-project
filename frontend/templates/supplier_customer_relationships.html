@@ -143,6 +143,48 @@
                     .append("g");
                 const color = d3.scaleOrdinal(d3.schemeCategory10);
                 
+                const zoom = d3.zoom()
+                    .on("zoom", function (event) {
+                        svg.attr("transform", event.transform);
+                    });
+
+                // Attach zoom behavior to the SVG
+                d3.select("#network-graph svg").call(zoom);
+
+
+                // ... [Rest of your code for setting up links, nodes, labels, etc.] ...
+
+                function fitGraphToView() {
+                    // Get the min and max x and y coordinates
+                    let minX = d3.min(nodes, d => d.x - calculateRadius(d));
+                    let minY = d3.min(nodes, d => d.y - calculateRadius(d));
+                    let maxX = d3.max(nodes, d => d.x + calculateRadius(d));
+                    let maxY = d3.max(nodes, d => d.y + calculateRadius(d));
+
+                    // Include link endpoints in the calculation
+                    links.forEach(link => {
+                        minX = Math.min(minX, link.source.x, link.target.x);
+                        minY = Math.min(minY, link.source.y, link.target.y);
+                        maxX = Math.max(maxX, link.source.x, link.target.x);
+                        maxY = Math.max(maxY, link.source.y, link.target.y);
+                    });
+
+                    const boundsWidth = maxX - minX;
+                    const boundsHeight = maxY - minY;
+                    const viewportWidth = $("#network-graph").width();
+                    const viewportHeight = $("#network-graph").height();
+                    const scaleX = viewportWidth / boundsWidth;
+                    const scaleY = viewportHeight / boundsHeight;
+                    const scale = Math.min(scaleX, scaleY) * 0.9; // Scale down a bit for padding
+
+                    const translateX = -minX * scale + (viewportWidth - boundsWidth * scale) / 2;
+                    const translateY = -minY * scale + (viewportHeight - boundsHeight * scale) / 2;
+
+                    svg.transition()
+                        .duration(500)
+                        .call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(scale));
+                }
+
                 // Spread nodes horizontally
                 spreadNodes(nodes, width);
 
@@ -184,7 +226,6 @@
                     };
                 }
 
-
                 // Modify the simulation
                 const simulation = d3.forceSimulation(nodes)
                     .force("link", d3.forceLink(links).id(d => d.id)
@@ -194,8 +235,8 @@
                     .force("groupY", forceGroupY(groupYPositions))
                     .force("groupX", d3.forceX(width / 2).strength(0.05)) // Gentle horizontal force
                     .force("collision", d3.forceCollide().radius(d => calculateRadius(d) + 20))
-
-
+                    
+                
                 // Function to count the number of links connected to a node
                 function count(node) {
                     return links.reduce(function(count, link) {
@@ -323,6 +364,8 @@
                 });
                     
                 const linkLabelOffset = 12; // Adjust this value to control the offset distance
+                let tickCounter = 0;
+                const tickUpdateThreshold = 70; // Call fitGraphToView every 10 ticks
 
                 simulation.on("tick", () => {
                     link.attr("x1", d => d.source.x)
@@ -364,6 +407,11 @@
                             .attr("x", x + width / 2)
                             .attr("y", y - 10);
                     });
+                    tickCounter++;
+                    if (tickCounter >= tickUpdateThreshold) {
+                        fitGraphToView();
+                        tickCounter = 0;
+                    }
                 });
             }
 
